@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestione Utenti</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Gestione Utenti</h1>
+
+<!-- Form per Creare un Nuovo Utente Generico -->
+<form id="createGenericUserForm">
+    <h2>Crea Utente Generico</h2>
+    <label for="genericName">Nome:</label>
+    <input type="text" id="genericName" name="name" required>
+
+    <label for="genericLastname">Cognome:</label>
+    <input type="text" id="genericLastname" name="lastname" required>
+
+    <label for="genericAddress">Indirizzo:</label>
+    <input type="text" id="genericAddress" name="address" required>
+
+    <label for="genericDateOfBirth">Data di Nascita:</label>
+    <input type="date" id="genericDateOfBirth" name="dateOfBirth" required>
+
+    <button type="submit">Crea Utente Generico</button>
+</form>
+
+<!-- Form per Creare un Nuovo Staff User -->
+<form id="createStaffUserForm">
+    <h2>Crea Staff User</h2>
+    <label for="staffName">Nome:</label>
+    <input type="text" id="staffName" name="name" required>
+
+    <label for="staffLastname">Cognome:</label>
+    <input type="text" id="staffLastname" name="lastname" required>
+
+    <label for="staffAddress">Indirizzo:</label>
+    <input type="text" id="staffAddress" name="address" required>
+
+    <label for="staffRole">Ruolo:</label>
+    <select id="staffRole" name="role" required>
+        <option value="" disabled selected>Seleziona un ruolo</option>
+        <option value="PRODUTTORE">PRODUTTORE</option>
+        <option value="TRASFORMATORE">TRASFORMATORE</option>
+        <option value="DISTRIBUTORE_TIPICITA">DISTRIBUTORE_TIPICITA</option>
+        <option value="CURATORE">CURATORE</option>
+        <option value="ANIMATORE_FILIERA">ANIMATORE_FILIERA</option>
+        <option value="ACQUIRENTE">ACQUIRENTE</option>
+        <option value="UTENTE_GENERICO">UTENTE_GENERICO</option>
+        <option value="GESTORE_PIATTAFORMA">GESTORE_PIATTAFORMA</option>
+    </select>
+
+    <label for="staffDateOfBirth">Data di Nascita:</label>
+    <input type="date" id="staffDateOfBirth" name="dateOfBirth" required>
+
+    <button type="submit">Crea Staff User</button>
+</form>
+
+<!-- Bottoni per Mostrare le Liste degli Utenti -->
+<button id="showGenericUsersBtn">Mostra Utenti Generici</button>
+<button id="showStaffUsersBtn">Mostra Staff User</button>
+
+<!-- Tabella degli Utenti Generici -->
+<h2>Lista Utenti Generici</h2>
+<table id="genericUsersTable" border="1">
+    <thead>
+    <tr>
+        <th>User ID</th>
+        <th>Nome</th>
+        <th>Cognome</th>
+        <th>Indirizzo</th>
+        <th>Data di Nascita</th>
+        <th>Registrati</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Bottoni Sotto la Lista degli Utenti Generici -->
+<div id="genericUsersActions" style="margin-bottom: 20px;">
+    <button id="viewProductsBtn">Visualizza Prodotti e Info</button>
+    <button id="viewTraceabilityBtn">Visualizza Tracciabilità</button>
+    <!-- Rimosso il pulsante "Registrati come Acquirente" -->
+</div>
+
+<!-- Tabella per "Visualizza Prodotti e Info" -->
+<h2>Lista Prodotti e Info</h2>
+<table id="productsInfoTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Prezzo</th>
+        <th>Disponibilità</th>
+        <th>Categoria</th>
+        <th>Immagine</th>
+        <th>Info</th>
+        <th>Certificato di Qualità</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella per "Visualizza Tracciabilità" -->
+<h2>Tracciabilità</h2>
+<table id="traceabilityTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>Step</th>
+        <th>Descrizione</th>
+        <th>Data</th>
+        <th>Responsabile</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella degli Staff User -->
+<h2>Lista Staff User</h2>
+<table id="staffUsersTable" border="1">
+    <thead>
+    <tr>
+        <th>User ID</th>
+        <th>Nome</th>
+        <th>Cognome</th>
+        <th>Indirizzo</th>
+        <th>Ruolo</th>
+        <th>Data di Nascita</th>
+        <th>Codice</th>
+        <th>Registrati</th> <!-- Nuova Colonna -->
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<script src="js/scripts.js"></script>
+</body>
+</html>

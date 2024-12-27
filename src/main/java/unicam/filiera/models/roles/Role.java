@@ -1,0 +1,12 @@
+package unicam.filiera.models.roles;
+
+public enum Role {
+    PRODUTTORE,
+    TRASFORMATORE,
+    DISTRIBUTORE_TIPICITA,
+    CURATORE,
+    ANIMATORE_FILIERA,
+    ACQUIRENTE,
+    UTENTE_GENERICO,
+    GESTORE_PIATTAFORMA
+}
