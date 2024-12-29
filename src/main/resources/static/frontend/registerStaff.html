@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrazione Staff User</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Registrazione Staff User</h1>
+
+<form id="staffRegistrationForm">
+    <!-- Username -->
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+
+    <!-- Password -->
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <!-- Email -->
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <!-- Codice -->
+    <label for="codice">Codice:</label>
+    <input type="text" id="codice" name="codice" required>
+
+    <button type="submit">Registrati</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('staffRegistrationForm');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Costruisci i dati da inviare
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                email:    document.getElementById('email').value.trim(),
+                codice:   document.getElementById('codice').value.trim()
+            };
+
+            // Esempio: chiamata a un endpoint dedicato (da creare) "/api/staff-user/register"
+            fetch('http://localhost:8080/api/staff-user/promote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    // Se lo status è 2xx => response.ok = true
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        // Se non è 2xx, leggi comunque il messaggio di errore:
+                        return response.text().then(errMsg => {
+                            throw new Error(errMsg);
+                        });
+                    }
+                })
+                .then(successMessage => {
+                    alert(successMessage);
+                    // Reindirizza, ad esempio, alla pagina iniziale
+                    window.location.href = '/frontend/index.html';
+                })
+                .catch(error => {
+                    // Mostra l'errore come alert
+                    alert('Errore durante la registrazione: ' + error.message);
+                    console.error(error);
+                });
+        });
+    });
+</script>
+
+</body>
+</html>

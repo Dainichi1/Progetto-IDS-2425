@@ -1,11 +1,11 @@
 package unicam.filiera.repositorys;
 
+import unicam.filiera.models.actors.RegisteredUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import unicam.filiera.models.actors.RegisteredUser;
 
 @Repository
-public interface UserRepository extends JpaRepository<RegisteredUser, Long> {
+public interface RegisteredUserRepository extends JpaRepository<RegisteredUser, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
 }

@@ -1,57 +1,68 @@
 package unicam.filiera.restController;
 
-import jakarta.validation.Valid;
-import unicam.filiera.dtos.GenericUserCreationDTO;
-import unicam.filiera.models.actors.GenericUser;
-import unicam.filiera.models.roles.Role;
-import unicam.filiera.repositorys.GenericUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import unicam.filiera.dtos.BuyerRegistrationDTO;
+import unicam.filiera.models.actors.GenericUser;
+import unicam.filiera.services.GenericUserService;
 
+import jakarta.validation.Valid;
+
+import java.time.LocalDate;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/generic-user")
 public class GenericUserController {
 
-    private static final Logger logger = LoggerFactory.getLogger(GenericUserController.class);
-
     @Autowired
-    private GenericUserRepository genericUserRepository;
+    private GenericUserService genericUserService;
 
-    @PostMapping("/create")
-    public ResponseEntity<String> createGenericUser(@Valid @RequestBody GenericUserCreationDTO creationDTO) {
-        logger.info("Ricevuta richiesta di creazione Utente Generico: {}", creationDTO);
-
-        // Crea un nuovo GenericUser
-        GenericUser genericUser = new GenericUser();
-        genericUser.setName(creationDTO.getName());
-        genericUser.setLastname(creationDTO.getLastname());
-        genericUser.setAddress(creationDTO.getAddress());
-        genericUser.setDateOfBirth(creationDTO.getDateOfBirth());
-
-        // Imposta ruolo
-        genericUser.setRole(Role.UTENTE_GENERICO);
-        // 'code' non è presente in GenericUser, nessuna azione necessaria
-
+    // Endpoint per ottenere la lista degli utenti generici
+    @GetMapping("/list")
+    public ResponseEntity<List<GenericUser>> listGenericUsers() {
         try {
-            // Salva l'utente nel repository
-            genericUserRepository.save(genericUser);
-            logger.info("Utente Generico creato con successo: {}", genericUser);
-            return ResponseEntity.ok("Utente Generico creato con successo.");
+            List<GenericUser> genericUsers = genericUserService.getAllGenericUsers();
+            return ResponseEntity.ok(genericUsers);
         } catch (Exception e) {
-            logger.error("Errore durante la creazione dell'Utente Generico", e);
-            throw e; // L'eccezione verrà gestita dal GlobalExceptionHandler
+            return ResponseEntity.status(500).body(null); // Restituisce errore 500 in caso di problemi
         }
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<List<GenericUser>> listGenericUsers() {
-        logger.info("Ricevuta richiesta per elencare gli Utenti Generici");
-        List<GenericUser> users = genericUserRepository.findAll();
-        return ResponseEntity.ok(users);
+    // Endpoint per creare un nuovo utente generico
+    @PostMapping("/create")
+    public ResponseEntity<String> createGenericUser(@Valid @RequestBody BuyerRegistrationDTO buyerRegistrationDTO) {
+        try {
+            // Converte la stringa della data in LocalDate
+            LocalDate dateOfBirth = LocalDate.parse(buyerRegistrationDTO.getDateOfBirth());
+
+            // Chiama il servizio per creare l'utente generico
+            genericUserService.createGenericUser(
+                    buyerRegistrationDTO.getAddress(),
+                    dateOfBirth,
+                    buyerRegistrationDTO.getLastname(),
+                    buyerRegistrationDTO.getName()
+            );
+            return ResponseEntity.ok("Utente generico creato con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
+        }
+    }
+
+    // Endpoint per promuovere un utente generico
+    @PostMapping("/promote")
+    public ResponseEntity<String> promoteGenericUser(@Valid @RequestBody BuyerRegistrationDTO buyerRegistrationDTO) {
+        try {
+            genericUserService.promoteGenericUserToRegisteredUser(
+                    buyerRegistrationDTO.getGenericUserId(),
+                    buyerRegistrationDTO.getUsername(),
+                    buyerRegistrationDTO.getPassword(),
+                    buyerRegistrationDTO.getEmail()
+            );
+            return ResponseEntity.ok("Utente generico promosso a utente registrato con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
+        }
     }
 }

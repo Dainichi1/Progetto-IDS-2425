@@ -8,4 +8,14 @@ import java.util.Optional;
 
 @Repository
 public interface StaffUserRepository extends JpaRepository<StaffUser, Long> {
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByCodice(String codice);
+
+    Optional<StaffUser> findByCodice(String codice);
+
+
 }

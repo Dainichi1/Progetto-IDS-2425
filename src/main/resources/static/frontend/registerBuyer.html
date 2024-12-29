@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrazione Acquirente</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Registrazione come Acquirente</h1>
+
+<form id="acquirenteForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <!-- Campo nascosto per l'ID dell'utente generico -->
+    <input type="hidden" id="genericUserId" name="genericUserId">
+
+    <button type="submit">Registrati</button>
+</form>
+
+<!-- Inserisci qui sotto lo script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('acquirenteForm');
+
+        // 1. Leggi l'ID utente generico dalla query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+
+        // 2. Imposta l’input hidden con l’ID
+        document.getElementById('genericUserId').value = userId;
+
+        // 3. Gestione submit del form
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // 3.1. Costruisci i dati
+            const formData = {
+                genericUserId:  document.getElementById('genericUserId').value,
+                username:       document.getElementById('username').value,
+                password:       document.getElementById('password').value,
+                email:          document.getElementById('email').value
+            };
+
+            // 3.2. Manda la POST a /api/generic-user/promote
+            fetch('http://localhost:8080/api/generic-user/promote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text(); // Legge la stringa di successo
+                    } else {
+                        // Legge comunque il testo o JSON dell’errore
+                        return response.text().then(err => {
+                            throw new Error(err);
+                        });
+                    }
+                })
+                .then(successMessage => {
+                    // 3.3. Messaggio di successo e redirect
+                    alert(successMessage);
+                    // Torna alla index (o dove preferisci)
+                    window.location.href = '/frontend/index.html';
+                })
+                .catch(error => {
+                    // 3.4. Mostra l’errore
+                    console.error('Errore:', error);
+                    alert('Errore durante la registrazione: ' + error.message);
+                });
+        });
+    });
+</script>
+
+</body>
+</html>

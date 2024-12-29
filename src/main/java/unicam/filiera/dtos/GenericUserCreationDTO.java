@@ -1,31 +1,24 @@
 package unicam.filiera.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class GenericUserCreationDTO {
-    private String name;
-    private String lastname;
+
+    @NotBlank(message = "L'indirizzo non può essere vuoto.")
     private String address;
+
+    @NotNull(message = "La data di nascita non può essere vuota.")
     private LocalDate dateOfBirth;
 
-    // Getters e Setters
+    @NotBlank(message = "Il cognome non può essere vuoto.")
+    private String lastname;
 
-    public String getName() {
-        return name;
-    }
+    @NotBlank(message = "Il nome non può essere vuoto.")
+    private String name;
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
+    // Getter e Setter
     public String getAddress() {
         return address;
     }
@@ -40,5 +33,21 @@ public class GenericUserCreationDTO {
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

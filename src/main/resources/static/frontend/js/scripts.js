@@ -19,26 +19,30 @@ document.addEventListener('DOMContentLoaded', function () {
     createGenericUserForm.addEventListener('submit', function (event) {
         event.preventDefault();
 
-        const formData = {
-            name: document.getElementById('genericName').value,
-            lastname: document.getElementById('genericLastname').value,
-            address: document.getElementById('genericAddress').value,
-            dateOfBirth: document.getElementById('genericDateOfBirth').value
-        };
+        const name = document.getElementById('genericName').value.trim();
+        const lastname = document.getElementById('genericLastname').value.trim();
+        const address = document.getElementById('genericAddress').value.trim();
+        const dateOfBirth = document.getElementById('genericDateOfBirth').value.trim();
+
+        if (!name || !lastname || !address || !dateOfBirth) {
+            alert('Tutti i campi sono obbligatori.');
+            return;
+        }
+
+        const formData = { name, lastname, address, dateOfBirth };
 
         fetch('/api/generic-user/create', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(formData),
         })
             .then(response => {
                 if (response.ok) {
                     return response.text().then(text => {
                         alert(text);
                         createGenericUserForm.reset();
-                        // Aggiorna la lista degli utenti generici dopo la creazione
                         showGenericUsersBtn.click();
                     });
                 } else {
@@ -48,8 +52,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Errore nella creazione dell\'utente generico.');
+                console.error('Errore:', error);
+                alert('Errore nella creazione dell\'utente generico. Controlla la console.');
             });
     });
 
@@ -93,122 +97,174 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Gestione della visualizzazione degli Utenti Generici
+    let isGenericUsersTableVisible = false; // Variabile per tracciare la visibilità della tabella
+
     showGenericUsersBtn.addEventListener('click', function () {
-        fetch('/api/generic-user/list')
-            .then(response => response.json())
-            .then(data => {
-                // Pulisce la tabella
-                genericUsersTableBody.innerHTML = '';
+        if (isGenericUsersTableVisible) {
+            // Nascondi la tabella
+            genericUsersTableBody.innerHTML = ''; // Pulisci la tabella
+            genericUsersTableBody.parentElement.style.display = 'none'; // Nascondi il corpo della tabella
+            showGenericUsersBtn.textContent = 'Mostra Utenti Generici';
+        } else {
+            // Mostra la tabella e carica i dati
+            genericUsersTableBody.parentElement.style.display = 'table'; // Mostra il corpo della tabella
+            showGenericUsersBtn.textContent = 'Nascondi Utenti Generici';
 
-                data.forEach(user => {
-                    const row = document.createElement('tr');
+            fetch('/api/generic-user/list')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Errore durante il recupero degli utenti generici: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Pulisce la tabella
+                    genericUsersTableBody.innerHTML = '';
 
-                    // User ID
-                    const userIdCell = document.createElement('td');
-                    userIdCell.textContent = user.userId;
-                    row.appendChild(userIdCell);
+                    data.forEach(user => {
+                        const row = document.createElement('tr');
 
-                    // Nome
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = user.name;
-                    row.appendChild(nameCell);
+                        // User ID
+                        const userIdCell = document.createElement('td');
+                        userIdCell.textContent = user.userId || 'N/D';
+                        row.appendChild(userIdCell);
 
-                    // Cognome
-                    const lastnameCell = document.createElement('td');
-                    lastnameCell.textContent = user.lastname;
-                    row.appendChild(lastnameCell);
+                        // Nome
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = user.name || 'N/D';
+                        row.appendChild(nameCell);
 
-                    // Indirizzo
-                    const addressCell = document.createElement('td');
-                    addressCell.textContent = user.address;
-                    row.appendChild(addressCell);
+                        // Cognome
+                        const lastnameCell = document.createElement('td');
+                        lastnameCell.textContent = user.lastname || 'N/D';
+                        row.appendChild(lastnameCell);
 
-                    // Data di Nascita
-                    const dateOfBirthCell = document.createElement('td');
-                    dateOfBirthCell.textContent = user.dateOfBirth;
-                    row.appendChild(dateOfBirthCell);
+                        // Indirizzo
+                        const addressCell = document.createElement('td');
+                        addressCell.textContent = user.address || 'N/D';
+                        row.appendChild(addressCell);
 
-                    // Registrati - Nuova Colonna con Pulsante
-                    const registratiCell = document.createElement('td');
-                    const registratiButton = document.createElement('button');
-                    registratiButton.textContent = 'Registrati come Acquirente'; // Aggiornato
-                    registratiButton.classList.add('registrati-btn');
-                    registratiButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
-                    registratiCell.appendChild(registratiButton);
-                    row.appendChild(registratiCell);
+                        // Data di Nascita
+                        const dateOfBirthCell = document.createElement('td');
+                        dateOfBirthCell.textContent = user.dateOfBirth || 'N/D';
+                        row.appendChild(dateOfBirthCell);
 
-                    genericUsersTableBody.appendChild(row);
+                        // Pulsante "Registrati come Acquirente"
+                        const registratiCell = document.createElement('td');
+                        const registratiButton = document.createElement('button');
+                        registratiButton.textContent = 'Registrati come Acquirente';
+                        registratiButton.classList.add('registrati-btn');
+                        registratiButton.setAttribute('data-user-id', user.userId);
+                        registratiCell.appendChild(registratiButton);
+                        row.appendChild(registratiCell);
+
+                        // Pulsante "Login"
+                        const loginCell = document.createElement('td');
+                        const loginButton = document.createElement('button');
+                        loginButton.textContent = 'Login';
+                        loginButton.classList.add('login-btn');
+                        loginButton.setAttribute('data-user-id', user.userId);
+                        loginCell.appendChild(loginButton);
+                        row.appendChild(loginCell);
+
+                        genericUsersTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore nel recupero degli utenti generici. Controlla la console.');
                 });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Errore nel recupero degli utenti generici.');
-            });
+        }
+        isGenericUsersTableVisible = !isGenericUsersTableVisible; // Inverti lo stato di visibilità
     });
 
     // Gestione della visualizzazione degli Staff User
+    let isStaffUsersTableVisible = false; // Variabile per tracciare la visibilità della tabella
+
     showStaffUsersBtn.addEventListener('click', function () {
-        fetch('/api/staff-user/list')
-            .then(response => response.json())
-            .then(data => {
-                // Pulisce la tabella
-                staffUsersTableBody.innerHTML = '';
+        if (isStaffUsersTableVisible) {
+            // Nascondi la tabella
+            staffUsersTableBody.innerHTML = ''; // Pulisci la tabella
+            staffUsersTableBody.parentElement.style.display = 'none'; // Nascondi il corpo della tabella
+            showStaffUsersBtn.textContent = 'Mostra Staff User';
+        } else {
+            // Mostra la tabella e carica i dati
+            staffUsersTableBody.parentElement.style.display = 'table'; // Mostra il corpo della tabella
+            showStaffUsersBtn.textContent = 'Nascondi Staff User';
 
-                data.forEach(user => {
-                    const row = document.createElement('tr');
+            fetch('/api/staff-user/list')
+                .then(response => response.json())
+                .then(data => {
+                    // Pulisce la tabella
+                    staffUsersTableBody.innerHTML = '';
 
-                    // User ID
-                    const userIdCell = document.createElement('td');
-                    userIdCell.textContent = user.userId;
-                    row.appendChild(userIdCell);
+                    data.forEach(user => {
+                        const row = document.createElement('tr');
 
-                    // Nome
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = user.name;
-                    row.appendChild(nameCell);
+                        // User ID
+                        const userIdCell = document.createElement('td');
+                        userIdCell.textContent = user.userId;
+                        row.appendChild(userIdCell);
 
-                    // Cognome
-                    const lastnameCell = document.createElement('td');
-                    lastnameCell.textContent = user.lastname;
-                    row.appendChild(lastnameCell);
+                        // Nome
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = user.name;
+                        row.appendChild(nameCell);
 
-                    // Indirizzo
-                    const addressCell = document.createElement('td');
-                    addressCell.textContent = user.address;
-                    row.appendChild(addressCell);
+                        // Cognome
+                        const lastnameCell = document.createElement('td');
+                        lastnameCell.textContent = user.lastname;
+                        row.appendChild(lastnameCell);
 
-                    // Ruolo
-                    const roleCell = document.createElement('td');
-                    roleCell.textContent = user.role;
-                    row.appendChild(roleCell);
+                        // Indirizzo
+                        const addressCell = document.createElement('td');
+                        addressCell.textContent = user.address;
+                        row.appendChild(addressCell);
 
-                    // Data di Nascita
-                    const dateOfBirthCell = document.createElement('td');
-                    dateOfBirthCell.textContent = user.dateOfBirth;
-                    row.appendChild(dateOfBirthCell);
+                        // Ruolo
+                        const roleCell = document.createElement('td');
+                        roleCell.textContent = user.role;
+                        row.appendChild(roleCell);
 
-                    // Codice
-                    const codiceCell = document.createElement('td');
-                    codiceCell.textContent = user.codice;
-                    row.appendChild(codiceCell);
+                        // Data di Nascita
+                        const dateOfBirthCell = document.createElement('td');
+                        dateOfBirthCell.textContent = user.dateOfBirth;
+                        row.appendChild(dateOfBirthCell);
 
-                    // Registrati - Nuova Colonna con Pulsante
-                    const registratiCell = document.createElement('td');
-                    const registratiButton = document.createElement('button');
-                    registratiButton.textContent = 'Registrati'; // Puoi decidere se modificare anche questo
-                    registratiButton.classList.add('registrati-btn');
-                    registratiButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
-                    registratiCell.appendChild(registratiButton);
-                    row.appendChild(registratiCell);
+                        // Codice
+                        const codiceCell = document.createElement('td');
+                        codiceCell.textContent = user.codice;
+                        row.appendChild(codiceCell);
 
-                    staffUsersTableBody.appendChild(row);
+                        // Registrati - Nuova Colonna con Pulsante
+                        const registratiCell = document.createElement('td');
+                        const registratiButton = document.createElement('button');
+                        registratiButton.textContent = 'Registrati'; // Puoi decidere se modificare anche questo
+                        registratiButton.classList.add('registrati-btn');
+                        registratiButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
+                        registratiCell.appendChild(registratiButton);
+                        row.appendChild(registratiCell);
+
+                        // Login - Nuova Colonna con Pulsante
+                        const loginCell = document.createElement('td');
+                        const loginButton = document.createElement('button');
+                        loginButton.textContent = 'Login';
+                        loginButton.classList.add('login-btn');
+                        loginButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
+                        loginCell.appendChild(loginButton);
+                        row.appendChild(loginCell);
+
+                        staffUsersTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Errore nel recupero degli Staff User.');
                 });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Errore nel recupero degli Staff User.');
-            });
+        }
+        isStaffUsersTableVisible = !isStaffUsersTableVisible; // Inverti lo stato di visibilità
     });
+
 
     // Gestione della visualizzazione della Tabella "Visualizza Prodotti e Info"
     viewProductsBtn.addEventListener('click', function () {
@@ -239,20 +295,34 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Event Delegation per Gestire i Clic sui Pulsanti "Registrati" negli Utenti Generici
-    genericUsersTableBody.addEventListener('click', function(event) {
+    genericUsersTableBody.addEventListener('click', function (event) {
         if (event.target && event.target.matches('button.registrati-btn')) {
             const userId = event.target.getAttribute('data-user-id');
-            // Implementa la logica di registrazione qui in futuro
-            alert(`Registrazione come Acquirente per l'utente con ID: ${userId}`);
+            if (!userId) {
+                alert('Errore: ID utente non trovato.');
+                return;
+            }
+            // Reindirizza alla pagina di registrazione, passando userId come query param
+            // Esempio: /frontend/registerBuyer.html?userId=123
+            window.location.href = `/frontend/registerBuyer.html?userId=${userId}`;
         }
     });
+
+
+
+
 
     // Event Delegation per Gestire i Clic sui Pulsanti "Registrati" negli Staff User
     staffUsersTableBody.addEventListener('click', function(event) {
         if (event.target && event.target.matches('button.registrati-btn')) {
             const userId = event.target.getAttribute('data-user-id');
-            // Implementa la logica di registrazione qui in futuro
-            alert(`Registrazione per lo Staff User con ID: ${userId}`);
+            if (!userId) {
+                alert('Errore: ID Staff User non trovato.');
+                return;
+            }
+            // Reindirizza alla pagina di registrazione staff, passando l'ID
+            window.location.href = `/frontend/registerStaff.html?userId=${userId}`;
         }
     });
+
 });

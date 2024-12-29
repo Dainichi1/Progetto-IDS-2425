@@ -1,11 +1,11 @@
 package unicam.filiera.repositorys;
 
-import unicam.filiera.models.actors.GenericUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
+import unicam.filiera.models.actors.GenericUser;
 
 @Repository
 public interface GenericUserRepository extends JpaRepository<GenericUser, Long> {
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }

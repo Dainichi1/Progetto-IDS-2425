@@ -9,14 +9,8 @@ import jakarta.persistence.Table;
 @Table(name = "generic_user")
 public class GenericUser extends User {
 
-
-
-
-
     public void viewProducts() {
     }
-
-
 
     // Override del metodo 'updateProfile' se necessario
     @Override
