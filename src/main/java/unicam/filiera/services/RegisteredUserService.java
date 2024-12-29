@@ -7,12 +7,15 @@ import unicam.filiera.models.actors.RegisteredUser;
 import unicam.filiera.models.roles.Role;
 import unicam.filiera.repositorys.UserRepository;
 
+import java.util.List;
+
 @Service
 public class RegisteredUserService {
 
     @Autowired
     private UserRepository userRepository;
 
+    // Metodo per registrare un nuovo acquirente
     public void registerBuyer(BuyerRegistrationDTO buyerRegistrationDTO) {
         // Controlla se l'username o l'email sono già esistenti
         if (userRepository.existsByUsername(buyerRegistrationDTO.getUsername())) {
@@ -32,5 +35,11 @@ public class RegisteredUserService {
 
         // Salva l'utente nella tabella REGISTERED_USER
         userRepository.save(user);
+    }
+
+    // Metodo per ottenere tutti gli acquirenti
+    public List<RegisteredUser> getAllBuyers() {
+        // Filtra gli utenti con il ruolo ACQUIRENTE
+        return userRepository.findByRole(Role.ACQUIRENTE);
     }
 }

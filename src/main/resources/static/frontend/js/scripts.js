@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const showStaffUsersBtn = document.getElementById('showStaffUsersBtn');
     const genericUsersTableBody = document.querySelector('#genericUsersTable tbody');
     const staffUsersTableBody = document.querySelector('#staffUsersTable tbody');
+    const buyerLoginBtn = document.getElementById('buyerLoginBtn');
+    const showBuyersBtn = document.getElementById('showBuyersBtn');
+    const buyersTable = document.getElementById('buyersTable');
+    const buyersTableBody = buyersTable.querySelector('tbody');
 
     // Elementi per i Bottoni e le Tabelle
     const viewProductsBtn = document.getElementById('viewProductsBtn');
@@ -15,48 +19,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const traceabilityTable = document.getElementById('traceabilityTable');
     const traceabilityTableBody = traceabilityTable.querySelector('tbody');
 
-    // Gestione della creazione di un nuovo Utente Generico
-    createGenericUserForm.addEventListener('submit', function (event) {
-        event.preventDefault();
+    if (buyerLoginBtn) {
+        buyerLoginBtn.addEventListener('click', function () {
+            console.log('Reindirizzamento al login acquirente...'); // Debug
+            window.location.href = '/frontend/loginBuyer.html'; // Modifica il percorso se necessario
+        });
+    } else {
+        console.error('Il bottone "Login Acquirente" non è stato trovato.');
+    }
 
-        const name = document.getElementById('genericName').value.trim();
-        const lastname = document.getElementById('genericLastname').value.trim();
-        const address = document.getElementById('genericAddress').value.trim();
-        const dateOfBirth = document.getElementById('genericDateOfBirth').value.trim();
+    if (createGenericUserForm) {
+        // Gestione della creazione di un nuovo Utente Generico
+        createGenericUserForm.addEventListener('submit', function (event) {
+            event.preventDefault();
 
-        if (!name || !lastname || !address || !dateOfBirth) {
-            alert('Tutti i campi sono obbligatori.');
-            return;
-        }
+            const name = document.getElementById('genericName').value.trim();
+            const lastname = document.getElementById('genericLastname').value.trim();
+            const address = document.getElementById('genericAddress').value.trim();
+            const dateOfBirth = document.getElementById('genericDateOfBirth').value.trim();
 
-        const formData = { name, lastname, address, dateOfBirth };
+            if (!name || !lastname || !address || !dateOfBirth) {
+                alert('Tutti i campi sono obbligatori.');
+                return;
+            }
 
-        fetch('/api/generic-user/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.text().then(text => {
-                        alert(text);
-                        createGenericUserForm.reset();
-                        showGenericUsersBtn.click();
-                    });
-                } else {
-                    return response.json().then(err => {
-                        alert('Errore: ' + JSON.stringify(err));
-                    });
-                }
+            const formData = {name, lastname, address, dateOfBirth};
+
+            fetch('/api/generic-user/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
             })
-            .catch(error => {
-                console.error('Errore:', error);
-                alert('Errore nella creazione dell\'utente generico. Controlla la console.');
-            });
-    });
-
+                .then(response => {
+                    if (response.ok) {
+                        return response.text().then(text => {
+                            alert(text);
+                            createGenericUserForm.reset();
+                            showGenericUsersBtn.click();
+                        });
+                    } else {
+                        return response.json().then(err => {
+                            alert('Errore: ' + JSON.stringify(err));
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore nella creazione dell\'utente generico. Controlla la console.');
+                });
+        });
+    }
     // Gestione della creazione di un nuovo Staff User
     createStaffUserForm.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -94,6 +108,58 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error:', error);
                 alert('Errore nella creazione dello Staff User.');
             });
+    });
+
+    let isBuyersTableVisible = false; // Variabile per tracciare la visibilità della tabella
+
+    // Gestione del clic sul bottone "Mostra Acquirenti"
+    showBuyersBtn.addEventListener('click', function () {
+        if (isBuyersTableVisible) {
+            // Nascondi la tabella
+            buyersTable.style.display = 'none';
+            showBuyersBtn.textContent = 'Mostra Acquirenti';
+        } else {
+            // Mostra la tabella e carica i dati
+            buyersTable.style.display = 'table';
+            showBuyersBtn.textContent = 'Nascondi Acquirenti';
+
+            fetch('/api/buyers/list')
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(err => {
+                            console.error('Errore nella risposta:', err);
+                            throw new Error(`Errore ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    buyersTableBody.innerHTML = '';
+                    // Popola la tabella con i dati
+                    data.forEach(buyer => {
+                        const row = document.createElement('tr');
+
+                        // Colonne da visualizzare
+                        const columns = ['userId', 'address', 'dateOfBirth', 'email', 'lastname', 'name', 'role', 'username', 'amount', 'code'];
+
+                        columns.forEach(key => {
+                            const cell = document.createElement('td');
+                            cell.textContent = buyer[key] !== undefined && buyer[key] !== null ? buyer[key] : 'N/D'; // Controlla il valore
+                            row.appendChild(cell);
+                        });
+
+                        buyersTableBody.appendChild(row);
+                    });
+
+                })
+                .catch(error => {
+                    console.error('Errore nel recupero degli acquirenti:', error);
+                    alert('Errore nel recupero degli acquirenti. Controlla la console.');
+                });
+
+        }
+
+        isBuyersTableVisible = !isBuyersTableVisible; // Inverti lo stato di visibilità
     });
 
     // Gestione della visualizzazione degli Utenti Generici
@@ -157,15 +223,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         registratiButton.setAttribute('data-user-id', user.userId);
                         registratiCell.appendChild(registratiButton);
                         row.appendChild(registratiCell);
-
-                        // Pulsante "Login"
-                        const loginCell = document.createElement('td');
-                        const loginButton = document.createElement('button');
-                        loginButton.textContent = 'Login';
-                        loginButton.classList.add('login-btn');
-                        loginButton.setAttribute('data-user-id', user.userId);
-                        loginCell.appendChild(loginButton);
-                        row.appendChild(loginCell);
 
                         genericUsersTableBody.appendChild(row);
                     });
@@ -245,14 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         registratiCell.appendChild(registratiButton);
                         row.appendChild(registratiCell);
 
-                        // Login - Nuova Colonna con Pulsante
-                        const loginCell = document.createElement('td');
-                        const loginButton = document.createElement('button');
-                        loginButton.textContent = 'Login';
-                        loginButton.classList.add('login-btn');
-                        loginButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
-                        loginCell.appendChild(loginButton);
-                        row.appendChild(loginCell);
+
 
                         staffUsersTableBody.appendChild(row);
                     });
@@ -307,9 +357,6 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = `/frontend/registerBuyer.html?userId=${userId}`;
         }
     });
-
-
-
 
 
     // Event Delegation per Gestire i Clic sui Pulsanti "Registrati" negli Staff User

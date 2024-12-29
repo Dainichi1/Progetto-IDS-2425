@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Acquirente</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Login Acquirente</h1>
+
+<form id="buyerLoginForm">
+    <!-- Username -->
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+
+    <!-- Password -->
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <!-- Bottone Login -->
+    <button type="submit">Login</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('buyerLoginForm');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim()
+            };
+
+            // Esegui il login
+            fetch('http://localhost:8080/api/login/buyer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text(); // Recupera la risposta del server (se necessaria)
+                    } else {
+                        return response.text().then(errMsg => { throw new Error(errMsg); });
+                    }
+                })
+                .then(() => {
+                    // Dopo login riuscito, reindirizza alla dashboard con l'username come parametro
+                    const redirectUrl = `/frontend/buyerDashboard.html?username=${encodeURIComponent(formData.username)}`;
+                    window.location.href = redirectUrl;
+                })
+                .catch(error => {
+                    console.error('Errore nel login:', error);
+                    alert('Errore nel login: ' + error.message);
+                });
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Acquirente</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1 id="welcomeMessage">Benvenuto, Acquirente</h1>
+<p>Qui trovi le informazioni.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Recupera il parametro username dalla query string
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username'); // Assicurati che il login passi questo parametro
+
+        if (!username) {
+            alert('Errore: username non trovato.');
+            return;
+        }
+
+        // Chiama l'API per recuperare i dettagli dell'utente
+        fetch(`http://localhost:8080/api/user/details?username=${username}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Errore nel recupero dei dettagli utente.');
+                }
+                return response.json();
+            })
+            .then(userDetails => {
+                // Aggiorna il messaggio di benvenuto con nome e cognome
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                welcomeMessage.textContent = `Benvenuto, Acquirente (${userDetails.name} ${userDetails.lastname})`;
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento della dashboard.');
+            });
+    });
+</script>
+</body>
+</html>

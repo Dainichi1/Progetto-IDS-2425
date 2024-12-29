@@ -6,7 +6,13 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Gestione Utenti</h1>
+<h1>
+    Gestione Utenti
+    <div style="display: inline-block; margin-left: 20px;">
+        <button id="buyerLoginBtn" style="margin-right: 10px;">Login Acquirente</button>
+        <button id="staffLoginBtn">Login Staff</button>
+    </div>
+</h1>
 
 <!-- Form per Creare un Nuovo Utente Generico -->
 <form id="createGenericUserForm">
@@ -60,6 +66,7 @@
 <!-- Bottoni per Mostrare le Liste degli Utenti -->
 <button id="showGenericUsersBtn">Mostra Utenti Generici</button>
 <button id="showStaffUsersBtn">Mostra Staff User</button>
+<button id="showBuyersBtn">Mostra Acquirenti</button>
 
 <!-- Tabella degli Utenti Generici -->
 <h2>Lista Utenti Generici</h2>
@@ -72,7 +79,6 @@
         <th>Indirizzo</th>
         <th>Data di Nascita</th>
         <th>Registrati</th>
-        <th>Login</th>
     </tr>
     </thead>
     <tbody>
@@ -135,7 +141,28 @@
         <th>Data di Nascita</th>
         <th>Codice</th>
         <th>Registrati</th> <!-- Nuova Colonna -->
-        <th>Login</th> <!-- Nuova colonna -->
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella degli Acquirenti -->
+<h2>Lista Acquirenti</h2>
+<table id="buyersTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
     </tr>
     </thead>
     <tbody>
