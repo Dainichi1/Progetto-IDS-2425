@@ -193,7 +193,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
         }
-
         isBuyersTableVisible = !isBuyersTableVisible; // Inverti lo stato di visibilità
     });
 
@@ -336,9 +335,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         registratiButton.setAttribute('data-user-id', user.userId); // Attributo dati per identificare l'utente
                         registratiCell.appendChild(registratiButton);
                         row.appendChild(registratiCell);
-
-
-
                         staffUsersTableBody.appendChild(row);
                     });
                 })
@@ -461,5 +457,4 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = `/frontend/registerStaff.html?userId=${userId}`;
         }
     });
-
 });

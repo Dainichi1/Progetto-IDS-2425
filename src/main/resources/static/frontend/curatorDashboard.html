@@ -4,35 +4,156 @@
     <meta charset="UTF-8">
     <title>Dashboard Curatore</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #45a049;
+        }
+
+        .btn-reject:hover {
+            background-color: #e53935;
+        }
+    </style>
 </head>
 <body>
 <h1 id="welcomeMessage">Benvenuto, Curatore</h1>
-<p>Gestisci i tuoi prodotti qui.</p>
+<p>Gestisci i prodotti inviati per approvazione.</p>
 
+<!-- Tabella dei prodotti -->
+<table id="productsTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Prezzo</th>
+        <th>Categoria</th>
+        <th>Quantità</th>
+        <th>Info</th>
+        <th>Immagine</th>
+        <th>Certificato</th>
+        <th>Azione</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Le righe saranno generate dinamicamente -->
+    </tbody>
+</table>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const params = new URLSearchParams(window.location.search);
-        const username = params.get('username');
-
-        if (!username) {
-            alert('Errore: username non trovato.');
-            return;
-        }
-
-        fetch(`http://localhost:8080/api/user/details?username=${username}`)
+        fetch('http://localhost:8080/api/prodotti/curatore/list')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Errore nel recupero dei dettagli utente.');
+                    throw new Error('Errore nel recupero dei prodotti.');
                 }
                 return response.json();
             })
-            .then(userDetails => {
-                const welcomeMessage = document.getElementById('welcomeMessage');
-                welcomeMessage.textContent = `Benvenuto, Curatore (${userDetails.name} ${userDetails.lastname})`;
+            .then(prodotti => {
+                const tableBody = document.querySelector('#productsTable tbody');
+                tableBody.innerHTML = ''; // Svuota la tabella
+
+                prodotti.forEach(prodotto => {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td>${prodotto.id}</td>
+                        <td>${prodotto.name}</td>
+                        <td>${prodotto.price} €</td>
+                        <td>${prodotto.category}</td>
+                        <td>${prodotto.availability}</td>
+                        <td>${prodotto.info}</td>
+                        <td><img src="${prodotto.images}" alt="Immagine Prodotto" width="50"></td>
+                        <td><a href="${prodotto.certificato}" target="_blank">Scarica</a></td>
+                        <td>
+                            <button class="btn-approve" data-id="${prodotto.id}">Approva</button>
+                            <textarea class="curator-comment" data-id="${prodotto.id}" placeholder="Inserisci un commento"></textarea>
+                            <button class="btn-reject" data-id="${prodotto.id}">Rimanda</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Gestione dei bottoni
+                document.querySelectorAll('.btn-approve').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const productId = this.getAttribute('data-id');
+                        fetch(`http://localhost:8080/api/prodotti/curatore/action`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({ prodottoId: productId, action: 'approva' })
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    alert('Prodotto approvato con successo!');
+                                    this.closest('tr').remove();
+                                } else {
+                                    throw new Error('Errore durante l\'approvazione del prodotto.');
+                                }
+                            })
+                            .catch(error => console.error(error));
+                    });
+                });
+                document.querySelectorAll('.btn-reject').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const productId = this.getAttribute('data-id');
+                        const comment = document.querySelector(`.curator-comment[data-id="${productId}"]`).value;
+
+                        fetch('http://localhost:8080/api/prodotti/curatore/action', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({
+                                prodottoId: productId,
+                                action: 'rimanda',
+                                curatorComments: comment
+                            })
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    alert('Prodotto rimandato con successo!');
+                                    this.closest('tr').remove();
+                                } else {
+                                    throw new Error('Errore durante il rimando del prodotto.');
+                                }
+                            })
+                            .catch(error => console.error(error));
+                    });
+                });
             })
             .catch(error => {
                 console.error('Errore:', error);
-                alert('Errore nel caricamento della dashboard.');
+                alert('Errore nel caricamento dei prodotti.');
             });
     });
 </script>
