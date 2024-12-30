@@ -108,17 +108,17 @@ public class ProdottoService {
         Path folderPath = Paths.get(BASE_UPLOAD_DIR, subfolder);
         Files.createDirectories(folderPath);
 
-        // Uso un nome univoco per evitare conflitti
         String originalFileName = file.getOriginalFilename();
         String newFileName = System.currentTimeMillis() + "_" + originalFileName;
 
         Path filePath = folderPath.resolve(newFileName);
         file.transferTo(filePath.toFile());
 
-        // <-- Qui passo a salvare SOLO il percorso relativo
-        // Esempio: "images/<nuovo nome file>"
+        // Salva solo il percorso relativo
         return subfolder + "/" + newFileName;
     }
+
+
 
     /**
      * Recupera tutti i prodotti con stato "Approvato".

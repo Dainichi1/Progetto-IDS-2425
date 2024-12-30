@@ -97,7 +97,13 @@
                             <td contenteditable="true" data-field="category">${prodotto.category}</td>
                             <td contenteditable="true" data-field="info">${prodotto.info}</td>
                             <td contenteditable="true" data-field="availability">${prodotto.availability}</td>
-                            <td><img src="${prodotto.images || '#'}" alt="Immagine" width="50"></td>
+                            <td>
+                                <img
+                                    src="http://localhost:8080/images/${prodotto.images}"
+                                    alt="Immagine del prodotto"
+                                    style="width: 100px; height: auto;"
+                                />
+                            </td>
                             <td><a href="${prodotto.certificato || '#'}" target="_blank">Certificato</a></td>
                             <td>${prodotto.stato}</td>
                             <td>${prodotto.curatorComments || 'Nessun commento'}</td>
@@ -184,6 +190,32 @@
                 })
                 .catch(error => console.error(error));
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
+
+        if (!username) {
+            alert('Errore: username non trovato.');
+            return;
+        }
+
+        fetch(`http://localhost:8080/api/user/details?username=${username}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Errore nel recupero dei dettagli utente.');
+                }
+                return response.json();
+            })
+            .then(userDetails => {
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                welcomeMessage.textContent = `Benvenuto, Produttore (${userDetails.name} ${userDetails.lastname})`;
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento della dashboard.');
+            });
     });
 </script>
 </body>
