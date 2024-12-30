@@ -36,4 +36,42 @@ public class LoginController {
 
         return ResponseEntity.ok("Login avvenuto con successo.");
     }
+
+    @PostMapping("/staff")
+    public ResponseEntity<Map<String, String>> loginStaff(@RequestBody Map<String, String> loginData) {
+        String username = loginData.get("username");
+        String password = loginData.get("password");
+        String roleString = loginData.get("role");
+        String code = loginData.get("code");
+
+        // Converte la stringa del ruolo in un oggetto Role
+        Role role;
+        try {
+            role = Role.valueOf(roleString);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Ruolo non valido."));
+        }
+
+        // Cerca l'utente con il ruolo specifico
+        RegisteredUser user = registeredUserRepository.findByUsernameAndRole(username, role)
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato o ruolo non valido."));
+
+        // Verifica la password
+        if (!user.getPassword().equals(password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Password errata."));
+        }
+
+        // Verifica il CODE (solo per ruoli specifici)
+        if (user.getCode() == null || !user.getCode().equals(code)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Code errato."));
+        }
+
+        // Restituisci i dati necessari per il reindirizzamento
+        return ResponseEntity.ok(Map.of(
+                "username", user.getUsername(),
+                "role", user.getRole().name()
+        ));
+    }
+
+
 }

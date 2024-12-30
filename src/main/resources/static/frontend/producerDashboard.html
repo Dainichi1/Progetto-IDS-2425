@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Produttore</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1 id="welcomeMessage">Benvenuto, Produttore</h1>
+<p>Gestisci i tuoi prodotti qui.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
+
+        if (!username) {
+            alert('Errore: username non trovato.');
+            return;
+        }
+
+        fetch(`http://localhost:8080/api/user/details?username=${username}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Errore nel recupero dei dettagli utente.');
+                }
+                return response.json();
+            })
+            .then(userDetails => {
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                welcomeMessage.textContent = `Benvenuto, Produttore (${userDetails.name} ${userDetails.lastname})`;
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento della dashboard.');
+            });
+    });
+</script>
+</body>
+</html>

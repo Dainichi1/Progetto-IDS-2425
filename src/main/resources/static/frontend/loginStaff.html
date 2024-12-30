@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Staff</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Login Staff</h1>
+
+<form id="staffLoginForm">
+    <!-- Username -->
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+
+    <!-- Password -->
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <!-- Role -->
+    <label for="role">Ruolo:</label>
+    <select id="role" name="role" required>
+        <option value="" disabled selected>Seleziona un ruolo</option>
+        <option value="PRODUTTORE">Produttore</option>
+        <option value="TRASFORMATORE">Trasformatore</option>
+        <option value="DISTRIBUTORE_TIPICITA">Distributore Tipicità</option>
+        <option value="CURATORE">Curatore</option>
+        <option value="ANIMATORE_FILIERA">Animatore Filiera</option>
+        <option value="GESTORE_PIATTAFORMA">Gestore Piattaforma</option>
+    </select>
+
+    <!-- CODE -->
+    <label for="code">Code:</label>
+    <input type="text" id="code" name="code" required>
+
+    <!-- Bottone Login -->
+    <button type="submit">Login</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('staffLoginForm');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                role: document.getElementById('role').value.trim(),
+                code: document.getElementById('code').value.trim()
+            };
+
+            fetch('http://localhost:8080/api/login/staff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error || 'Errore sconosciuto'); });
+                    }
+                    return response.json(); // Restituisce i dati (username e role)
+                })
+                .then(responseData => {
+                    console.log('Dati utente:', responseData);
+                    const dashboardMap = {
+                        'PRODUTTORE': 'producerDashboard.html',
+                        'TRASFORMATORE': 'transformerDashboard.html',
+                        'DISTRIBUTORE_TIPICITA': 'distributorDashboard.html',
+                        'CURATORE': 'curatorDashboard.html',
+                        'ANIMATORE_FILIERA': 'animatorDashboard.html',
+                        'GESTORE_PIATTAFORMA': 'managerDashboard.html'
+                    };
+
+                    const role = responseData.role;
+                    const dashboard = dashboardMap[role];
+
+                    if (!dashboard) {
+                        throw new Error('Ruolo non valido o dashboard non configurata.');
+                    }
+
+                    const redirectUrl = `/frontend/${dashboard}?username=${encodeURIComponent(responseData.username)}`;
+                    window.location.href = redirectUrl;
+                })
+                .catch(error => {
+                    console.error('Errore nel login:', error);
+                    alert('Errore nel login: ' + error.message);
+                });
+        });
+
+    });
+
+
+
+</script>
+
+</body>
+</html>

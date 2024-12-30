@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const showBuyersBtn = document.getElementById('showBuyersBtn');
     const buyersTable = document.getElementById('buyersTable');
     const buyersTableBody = buyersTable.querySelector('tbody');
+    const staffLoginBtn = document.getElementById('staffLoginBtn');
 
     // Elementi per i Bottoni e le Tabelle
     const viewProductsBtn = document.getElementById('viewProductsBtn');
@@ -19,6 +20,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const traceabilityTable = document.getElementById('traceabilityTable');
     const traceabilityTableBody = traceabilityTable.querySelector('tbody');
 
+    const showProducersBtn = document.getElementById('showProducersBtn');
+    const producersTable = document.getElementById('producersTable');
+    const producersTableBody = producersTable.querySelector('tbody');
+
+    const showTransformersBtn = document.getElementById('showTransformersBtn');
+    const transformersTable = document.getElementById('transformersTable');
+    const transformersTableBody = transformersTable.querySelector('tbody');
+
+    const showDistributorsBtn = document.getElementById('showDistributorsBtn');
+    const distributorsTable = document.getElementById('distributorsTable');
+    const distributorsTableBody = distributorsTable.querySelector('tbody');
+
+    const showCuratorsBtn = document.getElementById('showCuratorsBtn');
+    const curatorsTable = document.getElementById('curatorsTable');
+    const curatorsTableBody = curatorsTable.querySelector('tbody');
+
+    const showAnimatorsBtn = document.getElementById('showAnimatorsBtn');
+    const animatorsTable = document.getElementById('animatorsTable');
+    const animatorsTableBody = animatorsTable.querySelector('tbody');
+
+    const showManagersBtn = document.getElementById('showManagersBtn');
+    const managersTable = document.getElementById('managersTable');
+    const managersTableBody = managersTable.querySelector('tbody');
+
     if (buyerLoginBtn) {
         buyerLoginBtn.addEventListener('click', function () {
             console.log('Reindirizzamento al login acquirente...'); // Debug
@@ -26,6 +51,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } else {
         console.error('Il bottone "Login Acquirente" non è stato trovato.');
+    }
+
+    // Bottone Login Staff
+    if (staffLoginBtn) {
+        staffLoginBtn.addEventListener('click', function () {
+            console.log('Reindirizzamento al login staff...'); // Debug
+            window.location.href = '/frontend/loginStaff.html'; // Modifica il percorso se necessario
+        });
+    } else {
+        console.error('Il bottone "Login Staff" non è stato trovato.');
     }
 
     if (createGenericUserForm) {
@@ -314,6 +349,61 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isStaffUsersTableVisible = !isStaffUsersTableVisible; // Inverti lo stato di visibilità
     });
+
+    // Funzione generica per gestire il caricamento delle tabelle
+    function handleTableToggle(button, table, tableBody, apiUrl, roleName) {
+        let isTableVisible = false;
+
+        button.addEventListener('click', function () {
+            if (isTableVisible) {
+                table.style.display = 'none';
+                button.textContent = `Mostra ${roleName}`;
+            } else {
+                table.style.display = 'table';
+                button.textContent = `Nascondi ${roleName}`;
+
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(err => {
+                                console.error(`Errore nella risposta (${roleName}):`, err);
+                                throw new Error(`Errore ${response.status}: ${response.statusText}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        tableBody.innerHTML = '';
+                        data.forEach(user => {
+                            const row = document.createElement('tr');
+                            const columns = ['userId', 'address', 'dateOfBirth', 'email', 'lastname', 'name', 'role', 'username', 'amount', 'code'];
+
+                            columns.forEach(key => {
+                                const cell = document.createElement('td');
+                                cell.textContent = user[key] !== undefined && user[key] !== null ? user[key] : 'N/D';
+                                row.appendChild(cell);
+                            });
+
+                            tableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error(`Errore nel recupero dei dati (${roleName}):`, error);
+                        alert(`Errore nel recupero dei dati per ${roleName}. Controlla la console.`);
+                    });
+            }
+
+            isTableVisible = !isTableVisible;
+        });
+    }
+
+    // Aggiunge la logica per ciascun ruolo
+    handleTableToggle(showProducersBtn, producersTable, producersTableBody, '/api/producers/list', 'Produttori');
+    handleTableToggle(showTransformersBtn, transformersTable, transformersTableBody, '/api/transformers/list', 'Trasformatori');
+    handleTableToggle(showDistributorsBtn, distributorsTable, distributorsTableBody, '/api/distributors/list', 'Distributori Tipicità');
+    handleTableToggle(showCuratorsBtn, curatorsTable, curatorsTableBody, '/api/curators/list', 'Curatori');
+    handleTableToggle(showAnimatorsBtn, animatorsTable, animatorsTableBody, '/api/animators/list', 'Animatori Filiera');
+    handleTableToggle(showManagersBtn, managersTable, managersTableBody, '/api/managers/list', 'Gestori Piattaforma');
 
 
     // Gestione della visualizzazione della Tabella "Visualizza Prodotti e Info"

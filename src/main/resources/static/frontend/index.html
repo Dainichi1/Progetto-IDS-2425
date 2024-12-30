@@ -52,8 +52,6 @@
         <option value="DISTRIBUTORE_TIPICITA">DISTRIBUTORE_TIPICITA</option>
         <option value="CURATORE">CURATORE</option>
         <option value="ANIMATORE_FILIERA">ANIMATORE_FILIERA</option>
-        <option value="ACQUIRENTE">ACQUIRENTE</option>
-        <option value="UTENTE_GENERICO">UTENTE_GENERICO</option>
         <option value="GESTORE_PIATTAFORMA">GESTORE_PIATTAFORMA</option>
     </select>
 
@@ -67,6 +65,13 @@
 <button id="showGenericUsersBtn">Mostra Utenti Generici</button>
 <button id="showStaffUsersBtn">Mostra Staff User</button>
 <button id="showBuyersBtn">Mostra Acquirenti</button>
+<button id="showProducersBtn">Mostra Produttori</button>
+<button id="showTransformersBtn">Mostra Trasformatori</button>
+<button id="showDistributorsBtn">Mostra Distributori Tipicità</button>
+<button id="showCuratorsBtn">Mostra Curatori</button>
+<button id="showAnimatorsBtn">Mostra Animatori Filiera</button>
+<button id="showManagersBtn">Mostra Gestori Piattaforma</button>
+
 
 <!-- Tabella degli Utenti Generici -->
 <h2>Lista Utenti Generici</h2>
@@ -169,6 +174,139 @@
     <!-- Righe della tabella popolate dinamicamente -->
     </tbody>
 </table>
+
+<!-- Tabella dei Produttori -->
+<h2>Lista Produttori</h2>
+<table id="producersTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella dei Trasformatori -->
+<h2>Lista Trasformatori</h2>
+<table id="transformersTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella dei Distributori Tipicità -->
+<h2>Lista Distributori Tipicità</h2>
+<table id="distributorsTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella dei Curatori -->
+<h2>Lista Curatori</h2>
+<table id="curatorsTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella degli Animatori Filiera -->
+<h2>Lista Animatori Filiera</h2>
+<table id="animatorsTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Tabella dei Gestori Piattaforma -->
+<h2>Lista Gestori Piattaforma</h2>
+<table id="managersTable" border="1" style="display: none;">
+    <thead>
+    <tr>
+        <th>USER_ID</th>
+        <th>ADDRESS</th>
+        <th>DATE_OF_BIRTH</th>
+        <th>EMAIL</th>
+        <th>LASTNAME</th>
+        <th>NAME</th>
+        <th>ROLE</th>
+        <th>USERNAME</th>
+        <th>AMOUNT</th>
+        <th>CODE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Righe della tabella popolate dinamicamente -->
+    </tbody>
+</table>
+
 
 <script src="js/scripts.js"></script>
 </body>
