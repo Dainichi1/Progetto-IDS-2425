@@ -225,6 +225,13 @@
 
         // Invia un nuovo prodotto
         submitForApproval.addEventListener('click', function () {
+            // Mostra la conferma
+            const confirmation = window.confirm("Stai per inviare il form al Curatore per l'approvazione. procedere?");
+            if (!confirmation) {
+                // L'utente ha annullato, non fare nulla
+                return;
+            }
+
             console.log("Pulsante 'Invia al Curatore' cliccato."); // Log di debug
 
             const form = document.getElementById('productForm');
@@ -254,6 +261,7 @@
                     console.error('Errore durante l\'invio del prodotto:', error);
                 });
         });
+
 
         function displayErrors(errors) {
             console.log("Errori ricevuti dal server:", errors); // Log di debug
