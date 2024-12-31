@@ -128,6 +128,25 @@ public class ProdottoService {
     }
 
     /**
+     * Pubblica un prodotto nel marketplace.
+     *
+     * @param prodottoId ID del prodotto da pubblicare
+     * @throws IllegalArgumentException se il prodotto non esiste o non è approvato
+     */
+    public void pubblicaProdottoNelMarketplace(Long prodottoId) {
+        Prodotto prodotto = prodottoRepository.findById(prodottoId)
+                .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato con ID: " + prodottoId));
+
+        if (!"approvato".equalsIgnoreCase(prodotto.getStato())) {
+            throw new IllegalArgumentException("Solo i prodotti approvati possono essere pubblicati nel marketplace.");
+        }
+
+        // Imposta lo stato a "pubblicato"
+        prodotto.setStato("pubblicato");
+        prodottoRepository.save(prodotto);
+    }
+
+    /**
      * Recupera tutti i prodotti con stato "Approvato".
      *
      * @return Lista dei prodotti approvati

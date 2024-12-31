@@ -21,6 +21,10 @@
             border-color: red;
             box-shadow: 0 0 5px red;
         }
+        /* Stile per i prodotti approvati */
+        .approved {
+            background-color: #e0ffe0; /* Verde chiaro */
+        }
     </style>
 </head>
 <body>
@@ -99,54 +103,74 @@
 
         // Funzione per caricare i prodotti
         function loadProducts() {
+            // Recupera i prodotti rimandati
             fetch('http://localhost:8080/api/prodotti/produttore/rimandati')
                 .then(response => response.json())
-                .then(prodotti => {
-                    const tableBody = document.querySelector('#productsTable tbody');
-                    tableBody.innerHTML = '';
+                .then(rimandati => {
+                    // Recupera i prodotti approvati
+                    fetch('http://localhost:8080/api/prodotti/produttore/approvati')
+                        .then(response => response.json())
+                        .then(approvati => {
+                            const tableBody = document.querySelector('#productsTable tbody');
+                            tableBody.innerHTML = '';
 
-                    prodotti.forEach(prodotto => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${prodotto.id}</td>
-                            <td contenteditable="true" data-field="name">${prodotto.name}</td>
-                            <td contenteditable="true" data-field="price">${prodotto.price.toFixed(2)}</td>
-                            <td contenteditable="true" data-field="category">${prodotto.category}</td>
-                            <td contenteditable="true" data-field="info">${prodotto.info}</td>
-                            <td contenteditable="true" data-field="availability">${prodotto.availability}</td>
-                            <td>
-                                <img
-                                    src="http://localhost:8080/${prodotto.images}"
-                                    alt="Immagine del prodotto"
-                                    style="width: 100px; height: auto;"
-                                />
-                                <br>
-                                <input type="file" data-id="${prodotto.id}" data-field="images" accept="image/*" />
-                            </td>
-                            <td>
-                                <a
-                                    href="http://localhost:8080/${prodotto.certificato}"
-                                    target="_blank"
-                                    rel="noopener noreferrer">
-                                    Certificato
-                                </a>
-                                <br>
-                                <input type="file" data-id="${prodotto.id}" data-field="certificato" accept=".pdf,.doc,.docx" />
-                            </td>
-                            <td>${prodotto.stato}</td>
-                            <td>${prodotto.curatorComments || 'Nessun commento'}</td>
-                            <td>
-                                <button class="btn-save" data-id="${prodotto.id}">Salva Modifiche</button>
-                                <button class="btn-resend" data-id="${prodotto.id}">Rinvia</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
+                            const tuttiProdotti = [...rimandati, ...approvati];
 
-                    attachSaveListeners();
-                    attachResendListeners();
+                            tuttiProdotti.forEach(prodotto => {
+                                const isApprovato = prodotto.stato.toLowerCase() === 'approvato';
+                                const row = document.createElement('tr');
+                                if (isApprovato) {
+                                    row.classList.add('approved'); // Aggiungi classe per stile opzionale
+                                }
+
+                                // Crea le celle della tabella
+                                row.innerHTML = `
+                                    <td>${prodotto.id}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="name">${prodotto.name}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="price">${parseFloat(prodotto.price).toFixed(2)}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="category">${prodotto.category}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="info">${prodotto.info}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="availability">${prodotto.availability}</td>
+                                    <td>
+                                        <img
+                                            src="http://localhost:8080/${prodotto.images}"
+                                            alt="Immagine del prodotto"
+                                            style="width: 100px; height: auto;"
+                                        />
+                                        <br>
+                                        ${isApprovato ? '' : `<input type="file" data-id="${prodotto.id}" data-field="images" accept="image/*" />`}
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="http://localhost:8080/${prodotto.certificato}"
+                                            target="_blank"
+                                            rel="noopener noreferrer">
+                                            Certificato
+                                        </a>
+                                        <br>
+                                        ${isApprovato ? '' : `<input type="file" data-id="${prodotto.id}" data-field="certificato" accept=".pdf,.doc,.docx" />`}
+                                    </td>
+                                    <td>${prodotto.stato}</td>
+                                    <td>${prodotto.curatorComments || 'Nessun commento'}</td>
+                                    <td>
+                                        ${isApprovato ? `
+                                            <button class="btn-publish" data-id="${prodotto.id}">Pubblica nel Marketplace</button>
+                                        ` : `
+                                            <button class="btn-save" data-id="${prodotto.id}">Salva Modifiche</button>
+                                            <button class="btn-resend" data-id="${prodotto.id}">Rinvia</button>
+                                        `}
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+
+                            attachSaveListeners();
+                            attachResendListeners();
+                            attachPublishListeners();
+                        })
+                        .catch(error => console.error('Errore nel recupero dei prodotti approvati:', error));
                 })
-                .catch(error => console.error('Errore nel caricamento dei prodotti:', error));
+                .catch(error => console.error('Errore nel recupero dei prodotti rimandati:', error));
         }
 
         function attachSaveListeners() {
@@ -184,14 +208,23 @@
                         method: 'POST',
                         body: formData
                     })
-                        .then(response => response.text())
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(errors => {
+                                    // Visualizza gli errori
+                                    displayErrors(errors);
+                                    throw new Error("Errore di validazione");
+                                });
+                            }
+                            return response.text();
+                        })
                         .then(result => {
-                            alert('Prodotto aggiornato con successo.');
+                            alert(result);
                             loadProducts(); // Ricarica i prodotti
                         })
                         .catch(error => {
                             console.error('Errore durante l\'aggiornamento del prodotto:', error);
-                            alert('Errore durante l\'aggiornamento del prodotto.');
+                            alert('Errore durante l\'aggiornamento del prodotto: ' + error.message);
                         });
                 });
             });
@@ -202,19 +235,74 @@
                 button.addEventListener('click', function () {
                     const prodottoId = this.getAttribute('data-id');
 
+                    // Conferma il rinvio
+                    const conferma = confirm("Stai per rinviare il prodotto al curatore. Procedere?");
+                    if (!conferma) {
+                        return;
+                    }
+
                     fetch('http://localhost:8080/api/prodotti/produttore/resend', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ prodottoId: prodottoId })
                     })
-                        .then(response => response.text())
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(errorMessage => {
+                                    throw new Error(errorMessage);
+                                });
+                            }
+                            return response.text();
+                        })
                         .then(result => {
                             alert(result);
                             loadProducts(); // Aggiorna i prodotti
                         })
                         .catch(error => {
                             console.error('Errore durante il rinvio del prodotto:', error);
-                            alert('Errore durante il rinvio del prodotto.');
+                            alert('Errore durante il rinvio del prodotto: ' + error.message);
+                        });
+                });
+            });
+        }
+
+        function attachPublishListeners() {
+            document.querySelectorAll('.btn-publish').forEach(button => {
+                button.addEventListener('click', function () {
+                    const prodottoId = this.getAttribute('data-id');
+
+                    // Conferma la pubblicazione
+                    const conferma = confirm("Stai per pubblicare il prodotto nel Marketplace. Procedere?");
+                    if (!conferma) {
+                        return;
+                    }
+
+                    // Recupera il ruolo dello staff dal contesto, se disponibile
+                    // Per semplicità, supponiamo che lo staff sia "produttore"
+                    const staffRole = "produttore";
+
+                    fetch(`http://localhost:8080/api/prodotti/${staffRole}/publish`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prodottoId: prodottoId })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(errorMessage => {
+                                    throw new Error(errorMessage);
+                                });
+                            }
+                            return response.text();
+                        })
+                        .then(result => {
+                            alert(result);
+                            // Rimuovi la riga del prodotto dalla tabella
+                            const row = this.closest('tr');
+                            row.remove();
+                        })
+                        .catch(error => {
+                            console.error('Errore durante la pubblicazione del prodotto:', error);
+                            alert('Errore durante la pubblicazione del prodotto: ' + error.message);
                         });
                 });
             });
@@ -226,7 +314,7 @@
         // Invia un nuovo prodotto
         submitForApproval.addEventListener('click', function () {
             // Mostra la conferma
-            const confirmation = window.confirm("Stai per inviare il form al Curatore per l'approvazione. procedere?");
+            const confirmation = window.confirm("Stai per inviare il form al Curatore per l'approvazione. Procedere?");
             if (!confirmation) {
                 // L'utente ha annullato, non fare nulla
                 return;
@@ -259,6 +347,7 @@
                 })
                 .catch(error => {
                     console.error('Errore durante l\'invio del prodotto:', error);
+                    alert('Errore durante l\'invio del prodotto: ' + error.message);
                 });
         });
 
@@ -312,7 +401,6 @@
         }
     });
 
-    // Seconda funzione DOMContentLoaded per il welcome message
     document.addEventListener('DOMContentLoaded', function () {
         const params = new URLSearchParams(window.location.search);
         const username = params.get('username');
@@ -334,8 +422,11 @@
                 welcomeMessage.textContent = `Benvenuto, Produttore (${userDetails.name} ${userDetails.lastname})`;
             })
             .catch(error => {
-                console.error('Errore nel caricamento della dashboard:', error);
+                console.error('Errore:', error);
                 alert('Errore nel caricamento della dashboard.');
             });
     });
 </script>
+
+</body>
+</html>

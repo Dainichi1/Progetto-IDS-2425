@@ -144,6 +144,33 @@ public class ProdottoController {
     }
 
 
+    @PostMapping("/{staff}/publish")
+    public ResponseEntity<String> publishProdotto(
+            @PathVariable String staff,
+            @RequestBody Map<String, Long> request
+    ) {
+        try {
+            Long prodottoId = request.get("prodottoId");
+            if (prodottoId == null) {
+                return ResponseEntity.badRequest().body("Parametro 'prodottoId' mancante.");
+            }
+
+            // Optional: Verifica che lo staff abbia i permessi per pubblicare
+            // Questo dipende dalla tua logica di autorizzazione
+
+            prodottoService.pubblicaProdottoNelMarketplace(prodottoId);
+            logger.info("Prodotto con ID {} pubblicato nel Marketplace da '{}'.", prodottoId, staff);
+            return ResponseEntity.ok("Prodotto pubblicato nel Marketplace con successo.");
+        } catch (IllegalArgumentException e) {
+            logger.error("Errore durante la pubblicazione del prodotto: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Errore interno durante la pubblicazione del prodotto: {}", e.getMessage());
+            return ResponseEntity.status(500).body("Errore interno del server: " + e.getMessage());
+        }
+    }
+
+
     /**
      * Recupera i prodotti con stato rimandato per il ruolo specificato.
      */
