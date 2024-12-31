@@ -35,8 +35,6 @@ public class StaffUserController {
         return ResponseEntity.ok(users);
     }
 
-
-
     @PostMapping("/create")
     public ResponseEntity<String> createStaffUser(@Valid @RequestBody StaffUserCreationDTO creationDTO) {
         logger.info("Ricevuta richiesta di creazione StaffUser: {}", creationDTO);
@@ -69,7 +67,5 @@ public class StaffUserController {
             return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
         }
     }
-
-
 }
 

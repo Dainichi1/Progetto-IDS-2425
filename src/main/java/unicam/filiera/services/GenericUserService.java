@@ -25,14 +25,6 @@ public class GenericUserService {
         return genericUserRepository.findAll();
     }
 
-    /**
-     * Crea un nuovo utente generico con i campi obbligatori.
-     *
-     * @param address     Indirizzo dell'utente generico.
-     * @param dateOfBirth Data di nascita dell'utente generico.
-     * @param lastname    Cognome dell'utente generico.
-     * @param name        Nome dell'utente generico.
-     */
     public void createGenericUser(String address, LocalDate dateOfBirth, String lastname, String name) {
         // Valida i campi obbligatori
         if (address == null || address.isBlank()) {
@@ -90,5 +82,4 @@ public class GenericUserService {
         userRepository.save(registeredUser);
         genericUserRepository.delete(genericUser);
     }
-
 }

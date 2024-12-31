@@ -37,9 +37,17 @@ public class RegisteredUserService {
         userRepository.save(user);
     }
 
-    // Metodo per ottenere tutti gli acquirenti
+    // Metodo per ottenere tutti gli utenti con un ruolo specifico
+    public List<RegisteredUser> getUsersByRole(String roleName) {
+        try {
+            Role role = Role.valueOf(roleName); // Converte il nome del ruolo in un valore enum
+            return userRepository.findByRole(role);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Ruolo non valido: " + roleName);
+        }
+    }
+
     public List<RegisteredUser> getAllBuyers() {
-        // Filtra gli utenti con il ruolo ACQUIRENTE
-        return userRepository.findByRole(Role.ACQUIRENTE);
+        return getUsersByRole("ACQUIRENTE");
     }
 }
