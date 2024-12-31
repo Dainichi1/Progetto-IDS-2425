@@ -20,8 +20,9 @@ public class ProdottoController {
     /**
      * Crea un nuovo prodotto e lo invia al curatore per l'approvazione.
      */
-    @PostMapping("/create")
-    public ResponseEntity<String> createProdotto(
+    @PostMapping("/{staff}/create")
+    public ResponseEntity<String> createProdottoForStaff(
+            @PathVariable String staff,
             @RequestParam String name,
             @RequestParam Double price,
             @RequestParam String category,
@@ -31,12 +32,14 @@ public class ProdottoController {
             @RequestParam MultipartFile certificato) {
 
         try {
-            prodottoService.createProdotto(name, price, category, info, availability, images, certificato);
-            return ResponseEntity.ok("Prodotto creato con successo e inviato al curatore per l'approvazione.");
+            prodottoService.createProdotto(name, price, category, info, availability, images, certificato, staff.toUpperCase());
+            return ResponseEntity.ok("Prodotto creato con successo per il ruolo " + staff);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Errore durante la creazione del prodotto: " + e.getMessage());
         }
     }
+
+
 
     /**
      * Restituisce la lista dei prodotti in attesa di approvazione per il curatore.
@@ -79,7 +82,7 @@ public class ProdottoController {
      * Recupera tutti i prodotti con stato approvato.
      */
     @GetMapping("/approvati")
-    public ResponseEntity<List<Prodotto>> getProdottiApprovati() {
+    public ResponseEntity<List<Prodotto>> getAllProdottiApprovati() {
         try {
             List<Prodotto> prodotti = prodottoService.getProdottiApprovati();
             return ResponseEntity.ok(prodotti);
@@ -88,13 +91,14 @@ public class ProdottoController {
         }
     }
 
+
     /**
-     * Recupera tutti i prodotti con stato rimandato al produttore.
+     * Recupera i prodotti con stato rimandato per il ruolo specificato.
      */
-    @GetMapping("/rimandati")
-    public ResponseEntity<List<Prodotto>> getProdottiRimandati() {
+    @GetMapping("/{staff}/rimandati")
+    public ResponseEntity<List<Prodotto>> getProdottiRimandatiPerRuolo(@PathVariable String staff) {
         try {
-            List<Prodotto> prodotti = prodottoService.getProdottiRimandati();
+            List<Prodotto> prodotti = prodottoService.getProdottiRimandatiPerStaff(staff.toUpperCase());
             return ResponseEntity.ok(prodotti);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
@@ -102,13 +106,29 @@ public class ProdottoController {
     }
 
     /**
-     * Consente al produttore di rinviare un prodotto al curatore.
+     * Recupera tutti i prodotti con stato approvato per il ruolo specificato.
      */
-    @PostMapping("/produttore/resend")
-    public ResponseEntity<String> resendProdotto(@RequestBody ProdottoRimandatoRequest request) {
+    @GetMapping("/{staff}/approvati")
+    public ResponseEntity<List<Prodotto>> getProdottiApprovatiPerRuolo(@PathVariable String staff) {
+        try {
+            List<Prodotto> prodotti = prodottoService.getProdottiApprovatiPerStaff(staff.toUpperCase());
+            return ResponseEntity.ok(prodotti);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+
+    /**
+     * Consente al ruolo specificato di rinviare un prodotto al curatore.
+     */
+    @PostMapping("/{staff}/resend")
+    public ResponseEntity<String> resendProdotto(
+            @PathVariable String staff,
+            @RequestBody ProdottoRimandatoRequest request) {
         try {
             Long prodottoId = request.getProdottoId();
-            prodottoService.resendProdotto(prodottoId);
+            prodottoService.resendProdotto(prodottoId, staff.toUpperCase());
             return ResponseEntity.ok("Prodotto inviato nuovamente al curatore.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Errore durante l'invio del prodotto: " + e.getMessage());
@@ -118,7 +138,7 @@ public class ProdottoController {
     /**
      * Aggiorna i dettagli di un prodotto.
      */
-    @PostMapping("/update")
+    @PostMapping("{staff}/update")
     public ResponseEntity<String> updateProdotto(@RequestBody Prodotto updatedProdotto) {
         try {
             prodottoService.updateProdotto(updatedProdotto);
@@ -129,6 +149,4 @@ public class ProdottoController {
             return ResponseEntity.status(500).body("Errore durante l'aggiornamento del prodotto: " + e.getMessage());
         }
     }
-
-
 }

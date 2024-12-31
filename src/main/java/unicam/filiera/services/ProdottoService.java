@@ -21,21 +21,27 @@ public class ProdottoService {
     @Autowired
     private ProdottoRepository prodottoRepository;
 
+    public List<Prodotto> getProdottiApprovati() {
+        return prodottoRepository.findByStato("Approvato");
+    }
+
+
     /**
      * Crea un nuovo prodotto utilizzando il Factory Pattern.
      * Salva immagini e certificati, assegna lo stato iniziale, e persiste il prodotto nel database.
      *
-     * @param name        Nome del prodotto
-     * @param price       Prezzo del prodotto
-     * @param category    Categoria del prodotto
-     * @param info        Informazioni aggiuntive
+     * @param name         Nome del prodotto
+     * @param price        Prezzo del prodotto
+     * @param category     Categoria del prodotto
+     * @param info         Informazioni aggiuntive
      * @param availability Quantità disponibile
-     * @param images      Immagine del prodotto
-     * @param certificato Certificato del prodotto
+     * @param images       Immagine del prodotto
+     * @param certificato  Certificato del prodotto
+     * @param staff
      * @throws Exception Se si verifica un errore durante il salvataggio
      */
     public void createProdotto(String name, Double price, String category, String info, Integer availability,
-                               MultipartFile images, MultipartFile certificato) throws Exception {
+                               MultipartFile images, MultipartFile certificato, String staff) throws Exception {
 
         // Logica di salvataggio file
         String imagePath = saveFile(images, "images");
@@ -50,6 +56,7 @@ public class ProdottoService {
                 .availability(availability)
                 .images(imagePath)
                 .certificato(certificatoPath)
+                .staff(staff)
                 .build();
 
         prodotto.setStato("In attesa di approvazione"); // Stato iniziale
@@ -118,34 +125,32 @@ public class ProdottoService {
         return subfolder + "/" + newFileName;
     }
 
-
-
     /**
      * Recupera tutti i prodotti con stato "Approvato".
      *
      * @return Lista dei prodotti approvati
      */
-    public List<Prodotto> getProdottiApprovati() {
-        return prodottoRepository.findByStato("Approvato");
+    public List<Prodotto> getProdottiRimandatiPerStaff(String staff) {
+        return prodottoRepository.findByStatoAndStaff("Rimandato", staff);
     }
 
-    /**
-     * Recupera tutti i prodotti con stato "Rimandato".
-     *
-     * @return Lista dei prodotti rimandati
-     */
-    public List<Prodotto> getProdottiRimandati() {
-        return prodottoRepository.findByStato("Rimandato");
+    public List<Prodotto> getProdottiApprovatiPerStaff(String staff) {
+        return prodottoRepository.findByStatoAndStaff("Approvato", staff);
     }
 
-    public void resendProdotto(Long prodottoId) {
+    public void resendProdotto(Long prodottoId, String staff) {
         Prodotto prodotto = prodottoRepository.findById(prodottoId)
                 .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato con ID: " + prodottoId));
+
+        if (!prodotto.getStaff().equalsIgnoreCase(staff)) {
+            throw new IllegalArgumentException("Il prodotto non appartiene al ruolo specificato.");
+        }
 
         prodotto.setStato("In attesa di approvazione");
         prodotto.setCuratorComments(null); // Rimuove eventuali commenti
         prodottoRepository.save(prodotto);
     }
+
 
     public void updateProdotto(Prodotto updatedProdotto) {
         Prodotto prodotto = prodottoRepository.findById(updatedProdotto.getId())

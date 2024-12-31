@@ -38,6 +38,9 @@ public class Prodotto {
     @Column(columnDefinition = "TEXT")
     private String curatorComments; // Commenti o modifiche del curatore
 
+    @Column
+    private String staff; // Identifica il tipo di staff: produttore, trasformatore, distributore
+
     // Costruttore no-arg pubblico richiesto da JPA
     public Prodotto() {
     }
@@ -53,11 +56,17 @@ public class Prodotto {
         this.certificato = builder.certificato;
         this.stato = builder.stato != null ? builder.stato : "pendente"; // Stato predefinito
         this.curatorComments = builder.curatorComments;
+        this.staff = builder.staff;
+
     }
 
     // Getters
     public Long getId() {
         return id;
+    }
+
+    public String getStaff() {
+        return staff;
     }
 
     public String getName() {
@@ -137,6 +146,10 @@ public class Prodotto {
         this.curatorComments = curatorComments;
     }
 
+    public void setStaff(String staff) {
+        this.staff = staff;
+    }
+
     // Builder Pattern
     public static class Builder {
         private String name;
@@ -148,6 +161,7 @@ public class Prodotto {
         private String certificato;
         private String stato;
         private String curatorComments;
+        private String staff;
 
         public Builder name(String name) {
             this.name = name;
@@ -196,6 +210,11 @@ public class Prodotto {
 
         public Prodotto build() {
             return new Prodotto(this);
+        }
+
+        public Builder staff(String staff) {
+            this.staff = staff;
+            return this;
         }
     }
 }

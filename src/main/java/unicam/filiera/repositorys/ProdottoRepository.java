@@ -35,4 +35,11 @@ public interface ProdottoRepository extends JpaRepository<Prodotto, Long> {
 
     // Trova prodotti in base al nome (cerca case insensitive)
     List<Prodotto> findByNameIgnoreCaseContaining(String name);
+
+    List<Prodotto> findByStatoAndStaff(String stato, String staff);
+
+
+
+
+
 }

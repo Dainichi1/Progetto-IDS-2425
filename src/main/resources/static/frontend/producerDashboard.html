@@ -37,6 +37,7 @@
         <label for="productImages">Immagine del prodotto:</label>
         <input type="file" id="productImages" name="images" accept="image/*">
         <label for="productCertificato">Certificato:</label>
+        <input type="hidden" name="staff" value="PRODUTTORE">
         <input type="file" id="productCertificato" name="certificato" accept=".pdf,.doc,.docx">
         <button type="button" id="submitForApproval" class="btn-primary">Invia al Curatore</button>
         <button type="button" id="cancelProduct" class="btn-secondary">Annulla</button>
@@ -82,8 +83,8 @@
 
         // Funzione per caricare i prodotti
         function loadProducts() {
-            fetch('http://localhost:8080/api/prodotti/rimandati')
-                .then(response => response.json())
+            fetch('http://localhost:8080/api/prodotti/produttore/rimandati')
+                    .then(response => response.json())
                 .then(prodotti => {
                     const tableBody = document.querySelector('#productsTable tbody');
                     tableBody.innerHTML = '';
@@ -126,7 +127,7 @@
                                 updatedData[field] = value;
                             });
 
-                            fetch(`http://localhost:8080/api/prodotti/update`, {
+                            fetch(`http://localhost:8080/api/prodotti/produttore/update`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -177,7 +178,7 @@
         // Invia un nuovo prodotto
         submitForApproval.addEventListener('click', function () {
             const formData = new FormData(document.getElementById('productForm'));
-            fetch('http://localhost:8080/api/prodotti/create', {
+            fetch('http://localhost:8080/api/prodotti/produttore/create', {
                 method: 'POST',
                 body: formData
             })
