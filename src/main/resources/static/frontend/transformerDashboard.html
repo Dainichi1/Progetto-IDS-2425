@@ -92,91 +92,116 @@
                     prodotti.forEach(prodotto => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${prodotto.id}</td>
-                            <td contenteditable="true" data-field="name">${prodotto.name}</td>
-                            <td contenteditable="true" data-field="price">${prodotto.price.toFixed(2)}</td>
-                            <td contenteditable="true" data-field="category">${prodotto.category}</td>
-                            <td contenteditable="true" data-field="info">${prodotto.info}</td>
-                            <td contenteditable="true" data-field="availability">${prodotto.availability}</td>
-                            <td>
-                                <img
-                                    src="http://localhost:8080/${prodotto.images}"
-                                    alt="Immagine del prodotto"
-                                    style="width: 100px; height: auto;"
-                                />
-                            </td>
-                            <td>
-                                <a
-                                    href="http://localhost:8080/${prodotto.certificato}"
-                                    target="_blank"
-                                    rel="noopener noreferrer">
-                                    Certificato
-                                </a>
-                            </td>
-                            <td>${prodotto.stato}</td>
-                            <td>${prodotto.curatorComments || 'Nessun commento'}</td>
-                            <td>
-                                <button class="btn-save" data-id="${prodotto.id}">Salva Modifiche</button>
-                                <button class="btn-resend" data-id="${prodotto.id}">Rinvia</button>
-                            </td>
-                        `;
+                    <td>${prodotto.id}</td>
+                    <td contenteditable="true" data-field="name">${prodotto.name}</td>
+                    <td contenteditable="true" data-field="price">${prodotto.price.toFixed(2)}</td>
+                    <td contenteditable="true" data-field="category">${prodotto.category}</td>
+                    <td contenteditable="true" data-field="info">${prodotto.info}</td>
+                    <td contenteditable="true" data-field="availability">${prodotto.availability}</td>
+                    <td>
+                        <img
+                            src="http://localhost:8080/${prodotto.images}"
+                            alt="Immagine del prodotto"
+                            style="width: 100px; height: auto;"
+                        />
+                        <br>
+                        <input type="file" data-id="${prodotto.id}" data-field="images" accept="image/*" />
+                    </td>
+                    <td>
+                        <a
+                            href="http://localhost:8080/${prodotto.certificato}"
+                            target="_blank"
+                            rel="noopener noreferrer">
+                            Certificato
+                        </a>
+                        <br>
+                        <input type="file" data-id="${prodotto.id}" data-field="certificato" accept=".pdf,.doc,.docx" />
+                    </td>
+                    <td>${prodotto.stato}</td>
+                    <td>${prodotto.curatorComments || 'Nessun commento'}</td>
+                    <td>
+                        <button class="btn-save" data-id="${prodotto.id}">Salva Modifiche</button>
+                        <button class="btn-resend" data-id="${prodotto.id}">Rinvia</button>
+                    </td>
+                `;
                         tableBody.appendChild(row);
                     });
-                    document.querySelectorAll('.btn-save').forEach(button => {
-                        button.addEventListener('click', function () {
-                            const prodottoId = this.getAttribute('data-id');
-                            const row = this.closest('tr');
-                            const updatedData = {};
 
-                            row.querySelectorAll('[contenteditable="true"]').forEach(cell => {
-                                const field = cell.getAttribute('data-field');
-                                const value = cell.innerText.trim();
-                                updatedData[field] = value;
-                            });
-
-                            fetch(`http://localhost:8080/api/prodotti/trasformatore/update`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    id: prodottoId,
-                                    ...updatedData
-                                })
-                            })
-                                .then(response => response.text())
-                                .then(result => {
-                                    alert('Prodotto aggiornato con successo.');
-                                    loadProducts(); // Ricarica i prodotti
-                                })
-                                .catch(error => {
-                                    console.error('Errore:', error);
-                                    alert('Errore durante l\'aggiornamento del prodotto.');
-                                });
-                        });
-                    });
-
-
-                    // Listener per il rinvio dei prodotti
-                    document.querySelectorAll('.btn-resend').forEach(button => {
-                        button.addEventListener('click', function () {
-                            const prodottoId = this.getAttribute('data-id');
-                            fetch('http://localhost:8080/api/prodotti/trasformatore/resend', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ prodottoId: prodottoId })
-                            })
-                                .then(response => response.text())
-                                .then(result => {
-                                    alert(result);
-                                    loadProducts(); // Aggiorna i prodotti
-                                })
-                                .catch(error => {
-                                    console.error(error);
-                                    alert('Errore durante il rinvio del prodotto.');
-                                });
-                        });
-                    });
+                    attachSaveListeners();
+                    attachResendListeners();
                 })
                 .catch(error => console.error(error));
+        }
+
+        function attachSaveListeners() {
+            document.querySelectorAll('.btn-save').forEach(button => {
+                button.addEventListener('click', function () {
+                    const prodottoId = this.getAttribute('data-id');
+                    const row = this.closest('tr');
+
+                    // Raccolta dei dati modificabili
+                    const updatedData = {};
+                    row.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+                        const field = cell.getAttribute('data-field');
+                        const value = cell.innerText.trim();
+                        updatedData[field] = value;
+                    });
+
+                    // Raccolta dei nuovi file
+                    const formData = new FormData();
+                    formData.append('id', prodottoId);
+
+                    row.querySelectorAll('input[type="file"]').forEach(input => {
+                        const field = input.getAttribute('data-field');
+                        if (input.files.length > 0) {
+                            formData.append(field, input.files[0]);
+                        }
+                    });
+
+                    // Aggiunta dei campi modificabili
+                    Object.keys(updatedData).forEach(key => {
+                        formData.append(key, updatedData[key]);
+                    });
+
+                    // Effettua la richiesta per aggiornare il prodotto
+                    fetch(`http://localhost:8080/api/prodotti/trasformatore/update`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            alert('Prodotto aggiornato con successo.');
+                            loadProducts(); // Ricarica i prodotti
+                        })
+                        .catch(error => {
+                            console.error('Errore:', error);
+                            alert('Errore durante l\'aggiornamento del prodotto.');
+                        });
+                });
+            });
+        }
+
+        function attachResendListeners() {
+            document.querySelectorAll('.btn-resend').forEach(button => {
+                button.addEventListener('click', function () {
+                    const prodottoId = this.getAttribute('data-id');
+
+                    fetch('http://localhost:8080/api/prodotti/trasformatore/resend', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prodottoId: prodottoId })
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            alert(result);
+                            loadProducts(); // Aggiorna i prodotti
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            alert('Errore durante il rinvio del prodotto.');
+                        });
+                });
+            });
         }
 
         loadProducts(); // Carica i prodotti all'avvio

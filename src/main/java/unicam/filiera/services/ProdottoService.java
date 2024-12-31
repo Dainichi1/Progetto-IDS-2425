@@ -152,27 +152,42 @@ public class ProdottoService {
     }
 
 
-    public void updateProdotto(Prodotto updatedProdotto) {
-        Prodotto prodotto = prodottoRepository.findById(updatedProdotto.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato"));
+    public void updateProdotto(
+            Long id,
+            String name,
+            Double price,
+            String category,
+            String info,
+            Integer availability,
+            MultipartFile images,
+            MultipartFile certificato,
+            String staff
+    ) throws Exception {
 
-        // Aggiorna i campi
-        prodotto.setName(updatedProdotto.getName());
-        prodotto.setPrice(updatedProdotto.getPrice());
-        prodotto.setCategory(updatedProdotto.getCategory());
-        prodotto.setInfo(updatedProdotto.getInfo());
-        prodotto.setAvailability(updatedProdotto.getAvailability());
+        Prodotto prodotto = prodottoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato con ID: " + id));
 
-        // Mantieni le immagini e i certificati se non forniti
-        if (updatedProdotto.getImages() != null) {
-            prodotto.setImages(updatedProdotto.getImages());
+
+        // Aggiorna i campi testuali se forniti
+        if (name != null) prodotto.setName(name);
+        if (price != null) prodotto.setPrice(BigDecimal.valueOf(price));
+        if (category != null) prodotto.setCategory(category);
+        if (info != null) prodotto.setInfo(info);
+        if (availability != null) prodotto.setAvailability(availability);
+        // Salvataggio immagine se fornita
+        if (images != null && !images.isEmpty()) {
+            String imagePath = saveFile(images, "images");
+            prodotto.setImages(imagePath);
         }
-        if (updatedProdotto.getCertificato() != null) {
-            prodotto.setCertificato(updatedProdotto.getCertificato());
+        // Salvataggio certificato se fornito
+        if (certificato != null && !certificato.isEmpty()) {
+            String certPath = saveFile(certificato, "certificati");
+            prodotto.setCertificato(certPath);
         }
-
+        // Salva le modifiche nel DB
         prodottoRepository.save(prodotto);
     }
+
 
 
 }

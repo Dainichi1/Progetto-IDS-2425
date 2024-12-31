@@ -138,15 +138,32 @@ public class ProdottoController {
     /**
      * Aggiorna i dettagli di un prodotto.
      */
-    @PostMapping("{staff}/update")
-    public ResponseEntity<String> updateProdotto(@RequestBody Prodotto updatedProdotto) {
+    @PostMapping("/{staff}/update")
+    public ResponseEntity<String> updateProdotto(
+            @PathVariable String staff,
+            @RequestParam Long id,
+
+            // Campi testuali
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Double price,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String info,
+            @RequestParam(required = false) Integer availability,
+
+            // File upload
+            @RequestParam(required = false) MultipartFile images,
+            @RequestParam(required = false) MultipartFile certificato
+    ) {
         try {
-            prodottoService.updateProdotto(updatedProdotto);
+            // Passa tutto al Service
+            prodottoService.updateProdotto(
+                    id, name, price, category, info, availability,
+                    images, certificato, staff.toUpperCase()
+            );
             return ResponseEntity.ok("Prodotto aggiornato con successo.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Errore durante l'aggiornamento del prodotto: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Errore durante l'aggiornamento del prodotto: " + e.getMessage());
         }
     }
+
 }
