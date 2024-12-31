@@ -16,7 +16,7 @@ import java.util.List;
 public class ProdottoService {
 
     // Percorso assoluto per i file di upload
-    private static final String BASE_UPLOAD_DIR = "C:\\Users\\Marco Torquati\\Desktop\\Progetto-IDS-2425\\uploads";
+    private static final String BASE_UPLOAD_DIR = "E:\\Progetto-IDS-2425\\uploads";
 
     @Autowired
     private ProdottoRepository prodottoRepository;
@@ -43,6 +43,7 @@ public class ProdottoService {
     public void createProdotto(String name, Double price, String category, String info, Integer availability,
                                MultipartFile images, MultipartFile certificato, String staff) throws Exception {
 
+
         // Logica di salvataggio file
         String imagePath = saveFile(images, "images");
         String certificatoPath = saveFile(certificato, "certificati");
@@ -64,6 +65,7 @@ public class ProdottoService {
         // Salva il prodotto nel database
         prodottoRepository.save(prodotto);
     }
+
 
     /**
      * Recupera i prodotti in attesa di approvazione.
