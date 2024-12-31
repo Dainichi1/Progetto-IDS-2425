@@ -94,8 +94,21 @@
                         <td>${prodotto.category}</td>
                         <td>${prodotto.availability}</td>
                         <td>${prodotto.info}</td>
-                        <td><img src="${prodotto.images}" alt="Immagine Prodotto" width="50"></td>
-                        <td><a href="${prodotto.certificato}" target="_blank">Scarica</a></td>
+                        <td>
+                            <img
+                                src="http://localhost:8080/${prodotto.images}"
+                                alt="Immagine del prodotto"
+                                style="width: 100px; height: auto;"
+                            />
+                        </td>
+                        <td>
+                            <a
+                                href="http://localhost:8080/${prodotto.certificato}"
+                                target="_blank"
+                                rel="noopener noreferrer">
+                                Certificato
+                            </a>
+                        </td>
                         <td>
                             <button class="btn-approve" data-id="${prodotto.id}">Approva</button>
                             <textarea class="curator-comment" data-id="${prodotto.id}" placeholder="Inserisci un commento"></textarea>

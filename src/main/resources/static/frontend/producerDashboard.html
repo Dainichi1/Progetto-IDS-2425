@@ -100,12 +100,19 @@
                             <td contenteditable="true" data-field="availability">${prodotto.availability}</td>
                             <td>
                                 <img
-                                    src="http://localhost:8080/images/${prodotto.images}"
+                                    src="http://localhost:8080/${prodotto.images}"
                                     alt="Immagine del prodotto"
                                     style="width: 100px; height: auto;"
                                 />
                             </td>
-                            <td><a href="${prodotto.certificato || '#'}" target="_blank">Certificato</a></td>
+                            <td>
+                                <a
+                                    href="http://localhost:8080/${prodotto.certificato}"
+                                    target="_blank"
+                                    rel="noopener noreferrer">
+                                    Certificato
+                                </a>
+                            </td>
                             <td>${prodotto.stato}</td>
                             <td>${prodotto.curatorComments || 'Nessun commento'}</td>
                             <td>
