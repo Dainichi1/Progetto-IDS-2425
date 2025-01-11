@@ -47,6 +47,27 @@
 
 <button id="createProductButton" class="btn-primary">Crea Prodotto</button>
 <button id="refreshProducts" class="btn-primary">Aggiorna Prodotti</button>
+<button id="viewMarketplace" class="btn-primary">Visualizza Marketplace</button>
+
+<div id="marketplaceContainer" class="hidden">
+    <h2>Prodotti nel Marketplace (Stato: pubblicato)</h2>
+    <table id="marketplaceTable">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Prezzo</th>
+            <th>Categoria</th>
+            <th>Disponibilità</th>
+            <th>Info</th>
+            <th>Immagine</th>
+            <th>Certificato</th>
+            <th>Staff</th>
+            <th>Opzioni di Spedizione</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <div id="createProductForm" class="hidden">
     <h2>Crea un nuovo Prodotto</h2>
@@ -128,6 +149,9 @@
         const createProductForm = document.getElementById('createProductForm');
         const cancelProductButton = document.getElementById('cancelProduct');
         const submitForApproval = document.getElementById('submitForApproval');
+        const viewMarketplaceButton = document.getElementById('viewMarketplace'); // Pulsante "Visualizza Marketplace"
+        const marketplaceContainer = document.getElementById('marketplaceContainer'); // Contenitore nascosto
+        const marketplaceTableBody = document.querySelector('#marketplaceTable tbody'); // Tbody della tabella marketplace
 
         // Mostra/nasconde il form di creazione prodotto
         createProductButton.addEventListener('click', function () {
@@ -319,6 +343,49 @@
             });
         }
 
+        function loadMarketplaceProducts() {
+            fetch('http://localhost:8080/api/prodotti/published')
+                .then(response => response.json())
+                .then(prodottiPubblicati => {
+                    // Svuota la tabella
+                    marketplaceTableBody.innerHTML = '';
+
+                    // Popola la tabella #marketplaceTable con i prodotti "pubblicato"
+                    prodottiPubblicati.forEach(prodotto => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${prodotto.name}</td>
+                        <td>${parseFloat(prodotto.price).toFixed(2)}</td>
+                        <td>${prodotto.category}</td>
+                        <td>${prodotto.availability}</td>
+                        <td>${prodotto.info}</td>
+                        <td>
+                            <img
+                                src="http://localhost:8080/${prodotto.images}"
+                                alt="Immagine del prodotto"
+                                style="width: 100px; height: auto;"
+                            />
+                        </td>
+                        <td>
+                            <a
+                                href="http://localhost:8080/${prodotto.certificato}"
+                                target="_blank"
+                                rel="noopener noreferrer">
+                                Certificato
+                            </a>
+                        </td>
+                        <td>${prodotto.staff || ''}</td>
+                        <td>${prodotto.shippingOptions || ''}</td>
+                    `;
+                        marketplaceTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Errore durante il recupero dei prodotti pubblicati:', error);
+                    alert('Errore durante il recupero dei prodotti pubblicati.');
+                });
+        }
+
         function attachPublishListeners() {
             document.querySelectorAll('.btn-publish').forEach(button => {
                 button.addEventListener('click', function () {
@@ -370,6 +437,17 @@
                 });
             });
         }
+
+        // Event listener sul pulsante "Visualizza Marketplace"
+        viewMarketplaceButton.addEventListener('click', function () {
+            // Toggle della classe "hidden" per mostrare o nascondere il container
+            marketplaceContainer.classList.toggle('hidden');
+
+            // Se il container NON è nascosto, carica i prodotti pubblicati
+            if (!marketplaceContainer.classList.contains('hidden')) {
+                loadMarketplaceProducts();
+            }
+        });
 
         loadProducts(); // Carica i prodotti all'avvio
         refreshProductsButton.addEventListener('click', loadProducts);

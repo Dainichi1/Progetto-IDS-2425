@@ -249,4 +249,19 @@ public class ProdottoController {
         }
     }
 
+    /**
+     * Restituisce la lista dei prodotti con stato "pubblicato" (il Marketplace).
+     */
+    @GetMapping("/published")
+    public ResponseEntity<List<Prodotto>> getProdottiPubblicati() {
+        try {
+            // Chiama un metodo del service che recupera i prodotti "pubblicato"
+            List<Prodotto> prodotti = prodottoService.getProdottiByStato("pubblicato");
+            return ResponseEntity.ok(prodotti);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+
 }

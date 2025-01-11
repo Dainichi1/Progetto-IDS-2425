@@ -39,6 +39,9 @@ public interface ProdottoRepository extends JpaRepository<Prodotto, Long> {
     List<Prodotto> findByStatoAndStaff(String stato, String staff);
 
 
+    List<Prodotto> findByStatoIgnoreCase(String stato);
+
+
 
 
 

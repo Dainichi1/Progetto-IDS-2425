@@ -211,6 +211,10 @@ public class ProdottoService {
         prodottoRepository.save(prodotto);
     }
 
+    public List<Prodotto> getProdottiByStato(String stato) {
+        return prodottoRepository.findByStatoIgnoreCase(stato);
+    }
+
 
 
 }

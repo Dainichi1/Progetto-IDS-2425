@@ -1,3 +1,4 @@
+/*
 document.addEventListener('DOMContentLoaded', function () {
     const createGenericUserForm = document.getElementById('createGenericUserForm');
     const createStaffUserForm = document.getElementById('createStaffUserForm');
@@ -458,3 +459,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+*/
