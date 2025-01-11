@@ -103,12 +103,10 @@ public abstract class User {
 
 
     public boolean login() {
-        // Implementazione del metodo di login
         return true;
     }
 
     public void logout() {
-        // Implementazione del metodo di logout
     }
 
     public boolean updateProfile(ProfileDetails details) {

@@ -87,12 +87,6 @@ public class ProdottoController {
         }
     }
 
-
-
-
-
-
-
     /**
      * Restituisce la lista dei prodotti in attesa di approvazione per il curatore.
      */
@@ -143,24 +137,36 @@ public class ProdottoController {
         }
     }
 
-
     @PostMapping("/{staff}/publish")
     public ResponseEntity<String> publishProdotto(
             @PathVariable String staff,
-            @RequestBody Map<String, Long> request
+            @RequestBody Map<String, Object> request // <--- Cambiato in Map<String, Object>
     ) {
         try {
-            Long prodottoId = request.get("prodottoId");
+            // 1) Recupera il prodottoId
+            Long prodottoId = request.get("prodottoId") != null
+                    ? Long.valueOf(request.get("prodottoId").toString())
+                    : null;
+
             if (prodottoId == null) {
                 return ResponseEntity.badRequest().body("Parametro 'prodottoId' mancante.");
             }
 
-            // Optional: Verifica che lo staff abbia i permessi per pubblicare
-            // Questo dipende dalla tua logica di autorizzazione
+            // 2) Recupera la lista di opzioni di spedizione dal JSON
+            @SuppressWarnings("unchecked")
+            List<String> shippingOptions = (List<String>) request.get("shippingOptions");
 
-            prodottoService.pubblicaProdottoNelMarketplace(prodottoId);
-            logger.info("Prodotto con ID {} pubblicato nel Marketplace da '{}'.", prodottoId, staff);
+            // 3) Passa tutto al tuo service
+            prodottoService.pubblicaProdottoNelMarketplace(prodottoId, shippingOptions);
+
+            logger.info("Prodotto con ID {} pubblicato nel Marketplace da '{}'. Opzioni di spedizione: {}",
+                    prodottoId, staff, shippingOptions);
+
             return ResponseEntity.ok("Prodotto pubblicato nel Marketplace con successo.");
+        } catch (ClassCastException e) {
+            // Caso in cui shippingOptions non sia un array di stringhe
+            logger.error("Formato 'shippingOptions' non valido: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Formato 'shippingOptions' non valido.");
         } catch (IllegalArgumentException e) {
             logger.error("Errore durante la pubblicazione del prodotto: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Errore: " + e.getMessage());
@@ -169,7 +175,6 @@ public class ProdottoController {
             return ResponseEntity.status(500).body("Errore interno del server: " + e.getMessage());
         }
     }
-
 
     /**
      * Recupera i prodotti con stato rimandato per il ruolo specificato.
@@ -196,7 +201,6 @@ public class ProdottoController {
             return ResponseEntity.status(500).body(null);
         }
     }
-
 
     /**
      * Consente al ruolo specificato di rinviare un prodotto al curatore.
@@ -244,7 +248,5 @@ public class ProdottoController {
             return ResponseEntity.badRequest().body("Errore durante l'aggiornamento del prodotto: " + e.getMessage());
         }
     }
-
-
 
 }

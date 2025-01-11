@@ -41,6 +41,9 @@ public class Prodotto {
     @Column
     private String staff; // Identifica il tipo di staff: produttore, trasformatore, distributore
 
+    @Column
+    private String shippingOptions;
+
     // Costruttore no-arg pubblico richiesto da JPA
     public Prodotto() {
     }
@@ -57,6 +60,7 @@ public class Prodotto {
         this.stato = builder.stato != null ? builder.stato : "pendente"; // Stato predefinito
         this.curatorComments = builder.curatorComments;
         this.staff = builder.staff;
+        this.shippingOptions = builder.shippingOptions;
 
     }
 
@@ -105,6 +109,10 @@ public class Prodotto {
         return curatorComments;
     }
 
+    public String getShippingOptions() {
+        return shippingOptions;
+    }
+
     // Setters
     public void setId(Long id) {
         this.id = id;
@@ -150,6 +158,10 @@ public class Prodotto {
         this.staff = staff;
     }
 
+    public void setShippingOptions(String shippingOptions) {
+        this.shippingOptions = shippingOptions;
+    }
+
     // Builder Pattern
     public static class Builder {
         private String name;
@@ -162,6 +174,7 @@ public class Prodotto {
         private String stato;
         private String curatorComments;
         private String staff;
+        private String shippingOptions;
 
         public Builder name(String name) {
             this.name = name;
@@ -214,6 +227,11 @@ public class Prodotto {
 
         public Builder staff(String staff) {
             this.staff = staff;
+            return this;
+        }
+
+        public Builder shippingOptions(String shippingOptions) {
+            this.shippingOptions = shippingOptions;
             return this;
         }
     }

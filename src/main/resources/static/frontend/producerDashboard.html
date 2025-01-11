@@ -90,6 +90,7 @@
         <th>Certificato</th>
         <th>Stato</th>
         <th>Commenti</th>
+        <th>Spedizioni</th>
         <th>Azione</th>
     </tr>
     </thead>
@@ -190,6 +191,21 @@
                                     </td>
                                     <td>${prodotto.stato}</td>
                                     <td>${prodotto.curatorComments || 'Nessun commento'}</td>
+                                    <!-- Colonna Spedizioni -->
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${prodotto.id}" value="ordinaria" ${isApprovato ? '' : 'disabled'}>
+                                            Posta ordinaria (3 €)
+                                        </label><br>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${prodotto.id}" value="corriere" ${isApprovato ? '' : 'disabled'}>
+                                            Corriere (5 €)
+                                        </label><br>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${prodotto.id}" value="espresso" ${isApprovato ? '' : 'disabled'}>
+                                            Corriere espresso (10 €)
+                                        </label>
+                                    </td>
                                     <td>
                                         ${isApprovato ? `
                                             <button class="btn-publish" data-id="${prodotto.id}">Pubblica nel Marketplace</button>
@@ -308,21 +324,33 @@
             document.querySelectorAll('.btn-publish').forEach(button => {
                 button.addEventListener('click', function () {
                     const prodottoId = this.getAttribute('data-id');
-
-                    // Conferma la pubblicazione
-                    const conferma = confirm("Stai per pubblicare il prodotto nel Marketplace. Procedere?");
-                    if (!conferma) {
+                    const row = this.closest('tr');
+                    // Recuperiamo i checkbox
+                    const checkboxes = row.querySelectorAll(`input[type="checkbox"][name^="spedizioni"]`);
+                    let shippingSelected = [];
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            shippingSelected.push(checkbox.value);
+                        }
+                    });
+                    if (shippingSelected.length === 0) {
+                        alert("Devi selezionare almeno una modalità di spedizione prima di pubblicare il prodotto!");
                         return;
                     }
 
-                    // Recupera il ruolo dello staff dal contesto, se disponibile
-                    // Per semplicità, supponiamo che lo staff sia "produttore"
+                    const conferma = confirm("Stai per pubblicare il prodotto nel Marketplace. Procedere?");
+                    if (!conferma) return;
+
                     const staffRole = "produttore";
 
+                    // Invia anche le opzioni di spedizione
                     fetch(`http://localhost:8080/api/prodotti/${staffRole}/publish`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prodottoId: prodottoId })
+                        body: JSON.stringify({
+                            prodottoId: Number(prodottoId),
+                            shippingOptions: shippingSelected // <--- invio l’array
+                        })
                     })
                         .then(response => {
                             if (!response.ok) {
@@ -334,17 +362,16 @@
                         })
                         .then(result => {
                             alert(result);
-                            // Rimuovi la riga del prodotto dalla tabella
-                            const row = this.closest('tr');
+                            // rimuovi la riga o ricarica la pagina
                             row.remove();
                         })
                         .catch(error => {
-                            console.error('Errore durante la pubblicazione del prodotto:', error);
-                            alert('Errore durante la pubblicazione del prodotto: ' + error.message);
+                            alert("Errore durante la pubblicazione: " + error.message);
                         });
                 });
             });
         }
+
 
         loadProducts(); // Carica i prodotti all'avvio
         refreshProductsButton.addEventListener('click', loadProducts);

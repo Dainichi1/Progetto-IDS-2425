@@ -25,7 +25,6 @@ public class ProdottoService {
         return prodottoRepository.findByStato("Approvato");
     }
 
-
     /**
      * Crea un nuovo prodotto utilizzando il Factory Pattern.
      * Salva immagini e certificati, assegna lo stato iniziale, e persiste il prodotto nel database.
@@ -65,7 +64,6 @@ public class ProdottoService {
         // Salva il prodotto nel database
         prodottoRepository.save(prodotto);
     }
-
 
     /**
      * Recupera i prodotti in attesa di approvazione.
@@ -133,7 +131,7 @@ public class ProdottoService {
      * @param prodottoId ID del prodotto da pubblicare
      * @throws IllegalArgumentException se il prodotto non esiste o non è approvato
      */
-    public void pubblicaProdottoNelMarketplace(Long prodottoId) {
+    public void pubblicaProdottoNelMarketplace(Long prodottoId, List<String> shippingOptions) {
         Prodotto prodotto = prodottoRepository.findById(prodottoId)
                 .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato con ID: " + prodottoId));
 
@@ -141,8 +139,12 @@ public class ProdottoService {
             throw new IllegalArgumentException("Solo i prodotti approvati possono essere pubblicati nel marketplace.");
         }
 
-        // Imposta lo stato a "pubblicato"
+        String shippingOptionsString = String.join(",", shippingOptions);
+
+        prodotto.setShippingOptions(shippingOptionsString);
+
         prodotto.setStato("pubblicato");
+
         prodottoRepository.save(prodotto);
     }
 
