@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
-public class ProdottoCreationDTO {
+import java.util.List;
 
-    @NotBlank(message = "Il nome del prodotto è obbligatorio.")
+public class PacchettoCreationDTO {
+
+    @NotBlank(message = "Il nome del pacchetto è obbligatorio.")
     private String name;
 
     @NotNull(message = "Il prezzo è obbligatorio.")
@@ -24,10 +26,12 @@ public class ProdottoCreationDTO {
     @Min(value = 1, message = "La quantità deve essere almeno 1.")
     private Integer availability;
 
-    private MultipartFile images;
-    private MultipartFile certificato;
+    private List<MultipartFile> images;
+
+    private List<MultipartFile> certificati;
 
     // Getters e Setters
+
     public String getName() {
         return name;
     }
@@ -63,17 +67,18 @@ public class ProdottoCreationDTO {
         this.availability = availability;
     }
 
-    public MultipartFile getImages() {
+    public List<MultipartFile> getImages() {
         return images;
     }
-    public void setImages(MultipartFile images) {
+    public void setImages(List<MultipartFile> images) {
         this.images = images;
     }
 
-    public MultipartFile getCertificato() {
-        return certificato;
+    public List<MultipartFile> getCertificati() {
+        return certificati;
     }
-    public void setCertificato(MultipartFile certificato) {
-        this.certificato = certificato;
+    public void setCertificati(List<MultipartFile> certificati) {
+        this.certificati = certificati;
     }
 }
+

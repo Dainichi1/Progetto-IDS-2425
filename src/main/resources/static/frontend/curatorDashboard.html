@@ -10,17 +10,14 @@
             border-collapse: collapse;
             margin-top: 20px;
         }
-
         th, td {
             border: 1px solid #ccc;
             padding: 10px;
             text-align: left;
         }
-
         th {
             background-color: #f2f2f2;
         }
-
         button {
             padding: 5px 10px;
             margin: 0 5px;
@@ -28,21 +25,17 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
         .btn-approve {
             background-color: #4CAF50;
             color: white;
         }
-
         .btn-reject {
             background-color: #f44336;
             color: white;
         }
-
         .btn-approve:hover {
             background-color: #45a049;
         }
-
         .btn-reject:hover {
             background-color: #e53935;
         }
@@ -58,15 +51,19 @@
             cursor: pointer;
             font-size: 1em;
         }
+        .section-title {
+            margin-top: 40px;
+        }
     </style>
 </head>
 <body>
+
 <button id="logoutButton" class="logout-btn">Logout</button>
-
 <h1 id="welcomeMessage">Benvenuto, Curatore</h1>
-<p>Gestisci i prodotti inviati per approvazione.</p>
+<p>Gestisci i prodotti <strong>e i pacchetti</strong> inviati per approvazione.</p>
 
-<!-- Tabella dei prodotti -->
+<!-- SEZIONE PRODOTTI -->
+<h2 class="section-title">Prodotti in attesa</h2>
 <table id="productsTable">
     <thead>
     <tr>
@@ -81,24 +78,39 @@
         <th>Azione</th>
     </tr>
     </thead>
-    <tbody>
-    <!-- Le righe saranno generate dinamicamente -->
-    </tbody>
+    <tbody><!-- Righe generate da JS --></tbody>
 </table>
+
+<!-- SEZIONE PACCHETTI -->
+<h2 class="section-title">Pacchetti in attesa</h2>
+<table id="packagesTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome Pacchetto</th>
+        <th>Prezzo</th>
+        <th>Categoria</th>
+        <th>Disponibilità</th>
+        <th>Descrizione</th>
+        <th>Immagini</th>
+        <th>Certificati</th>
+        <th>Azione</th>
+    </tr>
+    </thead>
+    <tbody><!-- Righe generate da JS --></tbody>
+</table>
+
 <script>
+    // LOGOUT
     document.getElementById('logoutButton').addEventListener('click', function () {
-        // Effettua la richiesta di logout al backend
         fetch('http://localhost:8080/api/login/logout', {
             method: 'POST',
-            credentials: 'include' // Includi i cookie nella richiesta
+            credentials: 'include'
         })
             .then(response => {
                 if (response.ok) {
-                    // Rimuovi i dati salvati localmente
                     localStorage.removeItem('userToken');
                     localStorage.removeItem('username');
-
-                    // Reindirizza alla schermata iniziale
                     window.location.href = 'http://localhost:8080/frontend/index.html';
                 } else {
                     alert('Errore durante il logout. Riprova.');
@@ -109,7 +121,10 @@
                 alert('Errore durante il logout.');
             });
     });
+
+    // All'avvio della pagina
     document.addEventListener('DOMContentLoaded', function () {
+        // 1) Carichiamo i PRODOTTi in attesa
         fetch('http://localhost:8080/api/prodotti/curatore/list')
             .then(response => {
                 if (!response.ok) {
@@ -119,22 +134,20 @@
             })
             .then(prodotti => {
                 const tableBody = document.querySelector('#productsTable tbody');
-                tableBody.innerHTML = ''; // Svuota la tabella
-
+                tableBody.innerHTML = '';
                 prodotti.forEach(prodotto => {
                     const row = document.createElement('tr');
-
                     row.innerHTML = `
                         <td>${prodotto.id}</td>
                         <td>${prodotto.name}</td>
-                        <td>${prodotto.price} €</td>
+                        <td>${parseFloat(prodotto.price).toFixed(2)} €</td>
                         <td>${prodotto.category}</td>
                         <td>${prodotto.availability}</td>
                         <td>${prodotto.info}</td>
                         <td>
                             <img
                                 src="http://localhost:8080/${prodotto.images}"
-                                alt="Immagine del prodotto"
+                                alt="Immagine"
                                 style="width: 100px; height: auto;"
                             />
                         </td>
@@ -147,70 +160,88 @@
                             </a>
                         </td>
                         <td>
-                            <button class="btn-approve" data-id="${prodotto.id}">Approva</button>
-                            <textarea class="curator-comment" data-id="${prodotto.id}" placeholder="Inserisci un commento"></textarea>
-                            <button class="btn-reject" data-id="${prodotto.id}">Rimanda</button>
+                            <button class="btn-approve" data-id="${prodotto.id}" data-type="prodotto">Approva</button>
+                            <textarea class="curator-comment" data-id="${prodotto.id}" placeholder="Commento"></textarea>
+                            <button class="btn-reject" data-id="${prodotto.id}" data-type="prodotto">Rimanda</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
                 });
 
-                // Gestione dei bottoni
-                document.querySelectorAll('.btn-approve').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const productId = this.getAttribute('data-id');
-                        fetch(`http://localhost:8080/api/prodotti/curatore/action`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: new URLSearchParams({ prodottoId: productId, action: 'approva' })
-                        })
-                            .then(response => {
-                                if (response.ok) {
-                                    alert('Prodotto approvato con successo!');
-                                    this.closest('tr').remove();
-                                } else {
-                                    throw new Error('Errore durante l\'approvazione del prodotto.');
-                                }
-                            })
-                            .catch(error => console.error(error));
-                    });
-                });
-                document.querySelectorAll('.btn-reject').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const productId = this.getAttribute('data-id');
-                        const comment = document.querySelector(`.curator-comment[data-id="${productId}"]`).value;
-
-                        fetch('http://localhost:8080/api/prodotti/curatore/action', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: new URLSearchParams({
-                                prodottoId: productId,
-                                action: 'rimanda',
-                                curatorComments: comment
-                            })
-                        })
-                            .then(response => {
-                                if (response.ok) {
-                                    alert('Prodotto rimandato con successo!');
-                                    this.closest('tr').remove();
-                                } else {
-                                    throw new Error('Errore durante il rimando del prodotto.');
-                                }
-                            })
-                            .catch(error => console.error(error));
-                    });
-                });
+                attachProductActionListeners();
             })
             .catch(error => {
                 console.error('Errore:', error);
                 alert('Errore nel caricamento dei prodotti.');
             });
-    });
 
-    document.addEventListener('DOMContentLoaded', function () {
+        // 2) Carichiamo i PACCHETTI in attesa
+        fetch('http://localhost:8080/api/pacchetti/curatore/list')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Errore nel recupero dei pacchetti.');
+                }
+                return response.json();
+            })
+            .then(pacchetti => {
+                const tableBody = document.querySelector('#packagesTable tbody');
+                tableBody.innerHTML = '';
+                pacchetti.forEach(pacchetto => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${pacchetto.id}</td>
+                        <td>${pacchetto.name}</td>
+                        <td>${parseFloat(pacchetto.price).toFixed(2)} €</td>
+                        <td>${pacchetto.category}</td>
+                        <td>${pacchetto.availability}</td>
+                        <td>${pacchetto.info}</td>
+                        <td>
+                            ${
+                        // Se hai salvato le immagini come stringa CSV, puoi splittare e mostrare più link
+                        pacchetto.images
+                            ? pacchetto.images.split(',').map(imgPath => `
+                                    <img
+                                        src="http://localhost:8080/${imgPath.trim()}"
+                                        alt="Immagine"
+                                        style="width: 100px; height: auto;"
+                                    />
+                                `).join('<br/>')
+                            : 'Nessuna immagine'
+                    }
+                        </td>
+                        <td>
+                            ${
+                        pacchetto.certificati
+                            ? pacchetto.certificati.split(',').map(certPath => `
+                                    <a
+                                        href="http://localhost:8080/${certPath.trim()}"
+                                        target="_blank"
+                                        rel="noopener noreferrer">
+                                        Certificato
+                                    </a>
+                                `).join('<br/>')
+                            : 'Nessun certificato'
+                    }
+                        </td>
+                        <td>
+                            <button class="btn-approve" data-id="${pacchetto.id}" data-type="pacchetto">Approva</button>
+                            <textarea class="curator-comment" data-id="${pacchetto.id}" placeholder="Commento"></textarea>
+                            <button class="btn-reject" data-id="${pacchetto.id}" data-type="pacchetto">Rimanda</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                attachPackageActionListeners();
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento dei pacchetti.');
+            });
+
+        // Carichiamo i dettagli dell'utente Curatore
         const params = new URLSearchParams(window.location.search);
         const username = params.get('username');
-
         if (!username) {
             alert('Errore: username non trovato.');
             return;
@@ -232,6 +263,110 @@
                 alert('Errore nel caricamento della dashboard.');
             });
     });
+
+    // Funzioni di gestione APPROVA/RIMANDA per i prodotti
+    function attachProductActionListeners() {
+        // Approva
+        document.querySelectorAll('.btn-approve[data-type="prodotto"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.getAttribute('data-id');
+                fetch('http://localhost:8080/api/prodotti/curatore/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ prodottoId: productId, action: 'approva' })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Prodotto approvato con successo!');
+                            this.closest('tr').remove();
+                        } else {
+                            throw new Error('Errore durante l\'approvazione del prodotto.');
+                        }
+                    })
+                    .catch(error => console.error(error));
+            });
+        });
+        // Rimanda
+        document.querySelectorAll('.btn-reject[data-type="prodotto"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.getAttribute('data-id');
+                const comment = document.querySelector(`.curator-comment[data-id="${productId}"]`).value;
+
+                fetch('http://localhost:8080/api/prodotti/curatore/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        prodottoId: productId,
+                        action: 'rimanda',
+                        curatorComments: comment
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Prodotto rimandato con successo!');
+                            this.closest('tr').remove();
+                        } else {
+                            throw new Error('Errore durante il rimando del prodotto.');
+                        }
+                    })
+                    .catch(error => console.error(error));
+            });
+        });
+    }
+
+    // Funzioni di gestione APPROVA/RIMANDA per i pacchetti
+    function attachPackageActionListeners() {
+        // Approva
+        document.querySelectorAll('.btn-approve[data-type="pacchetto"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const packageId = this.getAttribute('data-id');
+                fetch('http://localhost:8080/api/pacchetti/curatore/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        pacchettoId: packageId,
+                        action: 'approva'
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Pacchetto approvato con successo!');
+                            this.closest('tr').remove();
+                        } else {
+                            throw new Error('Errore durante l\'approvazione del pacchetto.');
+                        }
+                    })
+                    .catch(error => console.error(error));
+            });
+        });
+        // Rimanda
+        document.querySelectorAll('.btn-reject[data-type="pacchetto"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const packageId = this.getAttribute('data-id');
+                const comment = document.querySelector(`.curator-comment[data-id="${packageId}"]`).value;
+
+                fetch('http://localhost:8080/api/pacchetti/curatore/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        pacchettoId: packageId,
+                        action: 'rimanda',
+                        curatorComments: comment
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Pacchetto rimandato con successo!');
+                            this.closest('tr').remove();
+                        } else {
+                            throw new Error('Errore durante il rimando del pacchetto.');
+                        }
+                    })
+                    .catch(error => console.error(error));
+            });
+        });
+    }
 </script>
+
 </body>
 </html>

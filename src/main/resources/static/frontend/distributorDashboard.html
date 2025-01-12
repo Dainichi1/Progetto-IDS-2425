@@ -45,7 +45,9 @@
 <p>Gestisci i tuoi prodotti qui.</p>
 
 <button id="createProductButton" class="btn-primary">Crea Prodotto</button>
+<button id="createPackageButton" class="btn-primary">Crea Pacchetto</button>
 <button id="refreshProducts" class="btn-primary">Aggiorna Prodotti</button>
+<button id="refreshPackages" class="btn-primary">Aggiorna Pacchetti</button>
 <button id="viewMarketplace" class="btn-primary">Visualizza Marketplace</button>
 
 <div id="marketplaceContainer" class="hidden">
@@ -97,6 +99,37 @@
     </form>
 </div>
 
+<div id="createPackageForm" class="hidden">
+    <h2>Crea un nuovo Pacchetto</h2>
+    <form id="packageForm" enctype="multipart/form-data">
+        <label for="packageNome">Nome del pacchetto:</label>
+        <input type="text" id="packageNome" name="name" required>
+
+        <label for="packagePrezzo">Prezzo:</label>
+        <input type="number" id="packagePrezzo" name="price" step="0.01" required>
+
+        <label for="packageCategoria">Categoria:</label>
+        <input type="text" id="packageCategoria" name="category" required>
+
+        <label for="packageDescrizione">Descrizione:</label>
+        <input type="text" id="packageDescrizione" name="info" required>
+
+        <label for="packageDisponibilita">Quantità disponibile:</label>
+        <input type="number" id="packageDisponibilita" name="availability" required>
+
+        <!-- File multipli per IMMAGINI -->
+        <label for="packageImages">Immagini del pacchetto (puoi caricare più file):</label>
+        <input type="file" id="packageImages" name="images" accept="image/*" multiple required>
+
+        <!-- File multipli per CERTIFICATI -->
+        <label for="packageCertificati">Certificati (puoi caricare più file):</label>
+        <input type="file" id="packageCertificati" name="certificati" accept=".pdf,.doc,.docx" multiple required>
+
+        <button type="button" id="submitPackage" class="btn-primary">Invia Pacchetto al Curatore</button>
+        <button type="button" id="cancelPackage" class="btn-secondary">Annulla</button>
+    </form>
+</div>
+
 <h2>Elenco Prodotti</h2>
 <table id="productsTable">
     <thead>
@@ -117,6 +150,28 @@
     </thead>
     <tbody></tbody>
 </table>
+
+<h2>Elenco Pacchetti</h2>
+<table id="packagesTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome Pacchetto</th>
+        <th>Prezzo</th>
+        <th>Categoria</th>
+        <th>Descrizione</th>
+        <th>Quantità</th>
+        <th>Immagini</th>
+        <th>Certificati</th>
+        <th>Stato</th>
+        <th>Commenti</th>
+        <th>Spedizioni</th>
+        <th>Azione</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
 
 <script>
     document.getElementById('logoutButton').addEventListener('click', function () {
@@ -145,12 +200,17 @@
     document.addEventListener('DOMContentLoaded', function () {
         const createProductButton = document.getElementById('createProductButton');
         const refreshProductsButton = document.getElementById('refreshProducts');
+        const refreshPackagesButton = document.getElementById('refreshPackages');
         const createProductForm = document.getElementById('createProductForm');
         const cancelProductButton = document.getElementById('cancelProduct');
         const submitForApproval = document.getElementById('submitForApproval');
         const viewMarketplaceButton = document.getElementById('viewMarketplace'); // Pulsante "Visualizza Marketplace"
         const marketplaceContainer = document.getElementById('marketplaceContainer'); // Contenitore nascosto
         const marketplaceTableBody = document.querySelector('#marketplaceTable tbody'); // Tbody della tabella marketplace
+        const createPackageButton = document.getElementById('createPackageButton');
+        const createPackageForm = document.getElementById('createPackageForm');
+        const cancelPackageButton = document.getElementById('cancelPackage');
+        const submitPackageButton = document.getElementById('submitPackage');
 
         // Mostra/nasconde il form di creazione prodotto
         createProductButton.addEventListener('click', function () {
@@ -162,48 +222,90 @@
             clearErrors();
         });
 
-        function loadMarketplaceProducts() {
-            fetch('http://localhost:8080/api/prodotti/published')
-                .then(response => response.json())
-                .then(prodottiPubblicati => {
+        createPackageButton.addEventListener('click', function () {
+            createPackageForm.classList.toggle('hidden');
+        });
+        cancelPackageButton.addEventListener('click', function () {
+            createPackageForm.classList.add('hidden');
+            document.getElementById('packageForm').reset();
+            clearErrors('packageForm');
+        });
+
+        function loadMarketplaceItems() {
+            Promise.all([
+                fetch('http://localhost:8080/api/prodotti/published').then(response => response.json()),
+                fetch('http://localhost:8080/api/pacchetti/published').then(response => response.json())
+            ])
+                .then(([prodottiPubblicati, pacchettiPubblicati]) => {
                     // Svuota la tabella
                     marketplaceTableBody.innerHTML = '';
 
-                    // Popola la tabella #marketplaceTable con i prodotti "pubblicato"
+                    // Popola la tabella con i prodotti pubblicati
                     prodottiPubblicati.forEach(prodotto => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>${prodotto.name}</td>
-                        <td>${parseFloat(prodotto.price).toFixed(2)}</td>
-                        <td>${prodotto.category}</td>
-                        <td>${prodotto.availability}</td>
-                        <td>${prodotto.info}</td>
-                        <td>
-                            <img
-                                src="http://localhost:8080/${prodotto.images}"
-                                alt="Immagine del prodotto"
-                                style="width: 100px; height: auto;"
-                            />
-                        </td>
-                        <td>
-                            <a
-                                href="http://localhost:8080/${prodotto.certificato}"
-                                target="_blank"
-                                rel="noopener noreferrer">
-                                Certificato
-                            </a>
-                        </td>
-                        <td>${prodotto.staff || ''}</td>
-                        <td>${prodotto.shippingOptions || ''}</td>
-                    `;
+                <td>${prodotto.name}</td>
+                <td>${parseFloat(prodotto.price).toFixed(2)}</td>
+                <td>${prodotto.category}</td>
+                <td>${prodotto.availability}</td>
+                <td>${prodotto.info}</td>
+                <td>
+                    <img
+                        src="http://localhost:8080/${prodotto.images}"
+                        alt="Immagine del prodotto"
+                        style="width: 100px; height: auto;"
+                    />
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/${prodotto.certificato}"
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        Certificato
+                    </a>
+                </td>
+                <td>${prodotto.staff || ''}</td>
+                <td>${prodotto.shippingOptions || ''}</td>
+            `;
+                        marketplaceTableBody.appendChild(row);
+                    });
+
+                    // Popola la tabella con i pacchetti pubblicati
+                    pacchettiPubblicati.forEach(pacchetto => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                <td>${pacchetto.name}</td>
+                <td>${parseFloat(pacchetto.price).toFixed(2)}</td>
+                <td>${pacchetto.category}</td>
+                <td>${pacchetto.availability}</td>
+                <td>${pacchetto.info}</td>
+                <td>
+                    <img
+                        src="http://localhost:8080/${pacchetto.images}"
+                        alt="Immagine del pacchetto"
+                        style="width: 100px; height: auto;"
+                    />
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/${pacchetto.certificati}"
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        Certificati
+                    </a>
+                </td>
+                <td>${pacchetto.staff || ''}</td>
+                <td>${pacchetto.shippingOptions || ''}</td>
+            `;
                         marketplaceTableBody.appendChild(row);
                     });
                 })
                 .catch(error => {
-                    console.error('Errore durante il recupero dei prodotti pubblicati:', error);
-                    alert('Errore durante il recupero dei prodotti pubblicati.');
+                    console.error('Errore durante il recupero dei prodotti/pacchetti pubblicati:', error);
+                    alert('Errore durante il recupero dei prodotti/pacchetti pubblicati.');
                 });
         }
+
 
         // Funzione per caricare i prodotti
         function loadProducts() {
@@ -273,10 +375,10 @@
                                     </td>
                                     <td>
                                         ${isApprovato ? `
-                                            <button class="btn-publish" data-id="${prodotto.id}">Pubblica nel Marketplace</button>
+                                            <button class="btn-publish" data-id="${prodotto.id}" data-type="prodotto">Pubblica nel Marketplace</button>
                                         ` : `
                                             <button class="btn-save" data-id="${prodotto.id}">Salva Modifiche</button>
-                                            <button class="btn-resend" data-id="${prodotto.id}">Rinvia</button>
+                                            <button class="btn-resend" data-id="${prodotto.id}" data-type="prodotto">Rinvia</button>
                                         `}
                                     </td>
                                 `;
@@ -291,6 +393,94 @@
                 })
                 .catch(error => console.error('Errore nel recupero dei prodotti rimandati:', error));
         }
+
+        function loadPackages() {
+            // 1) Pacchetti rimandati
+
+            fetch('http://localhost:8080/api/pacchetti/distributore/rimandati')
+                .then(response => response.json())
+                .then(rimandati => {
+                    // Recupera i prodotti approvati
+                    fetch('http://localhost:8080/api/pacchetti/distributore/approvati')
+                        .then(response => response.json())
+                        .then(approvati => {
+                            const tableBody = document.querySelector('#packagesTable tbody');
+                            tableBody.innerHTML = '';
+
+                            const tuttiPacchetti = [...rimandati, ...approvati];
+
+                            tuttiPacchetti.forEach(pacchetto => {
+                                const isApprovato = pacchetto.stato.toLowerCase() === 'approvato';
+                                const row = document.createElement('tr');
+                                if (isApprovato) {
+                                    row.classList.add('approved'); // Aggiungi classe per stile opzionale
+                                }
+
+                                // Crea le celle della tabella
+                                row.innerHTML = `
+                                    <td>${pacchetto.id}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="name">${pacchetto.name}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="price">${parseFloat(pacchetto.price).toFixed(2)}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="category">${pacchetto.category}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="info">${pacchetto.info}</td>
+                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="availability">${pacchetto.availability}</td>
+                                    <td>
+                                        <img
+                                            src="http://localhost:8080/${pacchetto.images}"
+                                            alt="Immagine del pacchetto"
+                                            style="width: 100px; height: auto;"
+                                        />
+                                        <br>
+                                        ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="images" accept="image/*" />`}
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="http://localhost:8080/${pacchetto.certificato}"
+                                            target="_blank"
+                                            rel="noopener noreferrer">
+                                            Certificato
+                                        </a>
+                                        <br>
+                                        ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="certificato" accept=".pdf,.doc,.docx" />`}
+                                    </td>
+                                    <td>${pacchetto.stato}</td>
+                                    <td>${pacchetto.curatorComments || 'Nessun commento'}</td>
+                                    <!-- Colonna Spedizioni -->
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="ordinaria" ${isApprovato ? '' : 'disabled'}>
+                                            Posta ordinaria (3 €)
+                                        </label><br>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="corriere" ${isApprovato ? '' : 'disabled'}>
+                                            Corriere (5 €)
+                                        </label><br>
+                                        <label>
+                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="espresso" ${isApprovato ? '' : 'disabled'}>
+                                            Corriere espresso (10 €)
+                                        </label>
+                                    </td>
+                                    <td>
+                                        ${isApprovato ? `
+                                            <button class="btn-publish" data-id="${pacchetto.id}" data-type="pacchetto">Pubblica nel Marketplace</button>
+                                        ` : `
+                                            <button class="btn-save" data-id="${pacchetto.id}">Salva Modifiche</button>
+                                            <button class="btn-resend" data-id="${pacchetto.id}" data-type="pacchetto">Rinvia</button>
+                                        `}
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+
+                            attachSaveListeners();
+                            attachResendListeners();
+                            attachPublishListeners();
+                        })
+                        .catch(error => console.error('Errore nel recupero dei prodotti approvati:', error));
+                })
+                .catch(error => console.error('Errore nel recupero dei prodotti rimandati:', error));
+        }
+
 
         function attachSaveListeners() {
             document.querySelectorAll('.btn-save').forEach(button => {
@@ -322,28 +512,44 @@
                         formData.append(key, updatedData[key]);
                     });
 
-                    // Effettua la richiesta per aggiornare il prodotto
-                    fetch(`http://localhost:8080/api/prodotti/distributore/update`, {
+                    // Determina l'endpoint in base al contesto (prodotti o pacchetti)
+                    let endpoint = '';
+                    if (row.closest('#packagesTable')) {
+                        endpoint = 'http://localhost:8080/api/pacchetti/distributore/update';
+                    } else if (row.closest('#productsTable')) {
+                        endpoint = 'http://localhost:8080/api/prodotti/distributore/update';
+                    } else {
+                        console.error('Contesto non riconosciuto per il salvataggio.');
+                        return;
+                    }
+
+                    // Effettua la richiesta per aggiornare il prodotto/pacchetto
+                    fetch(endpoint, {
                         method: 'POST',
                         body: formData
                     })
                         .then(response => {
                             if (!response.ok) {
-                                return response.json().then(errors => {
-                                    // Visualizza gli errori
-                                    displayErrors(errors);
-                                    throw new Error("Errore di validazione");
+                                // Se necessario, gestire errori JSON/text come precedentemente discusso
+                                return response.text().then(errorText => {
+                                    alert("Errore di aggiornamento: " + errorText);
+                                    throw new Error("Errore di validazione: " + errorText);
                                 });
                             }
                             return response.text();
                         })
                         .then(result => {
                             alert(result);
-                            loadProducts(); // Ricarica i prodotti
+                            // Ricarica i prodotti o pacchetti in base al contesto
+                            if (row.closest('#packagesTable')) {
+                                loadPackages();
+                            } else {
+                                loadProducts();
+                            }
                         })
                         .catch(error => {
-                            console.error('Errore durante l\'aggiornamento del prodotto:', error);
-                            alert('Errore durante l\'aggiornamento del prodotto: ' + error.message);
+                            console.error('Errore durante l\'aggiornamento:', error);
+                            alert('Errore durante l\'aggiornamento: ' + error.message);
                         });
                 });
             });
@@ -352,18 +558,34 @@
         function attachResendListeners() {
             document.querySelectorAll('.btn-resend').forEach(button => {
                 button.addEventListener('click', function () {
-                    const prodottoId = this.getAttribute('data-id');
+                    const id = this.getAttribute('data-id');
+                    const type = this.getAttribute('data-type');  // Legge il tipo: "prodotto" o "pacchetto"
 
                     // Conferma il rinvio
-                    const conferma = confirm("Stai per rinviare il prodotto al curatore. Procedere?");
+                    const conferma = confirm("Stai per rinviare l'elemento al curatore. Procedere?");
                     if (!conferma) {
                         return;
                     }
 
-                    fetch('http://localhost:8080/api/prodotti/distributore/resend', {
+                    let endpoint = '';
+                    let requestBody = {};
+
+                    // Determina endpoint e payload in base al tipo
+                    if (type === 'pacchetto') {
+                        endpoint = 'http://localhost:8080/api/pacchetti/distributore/resend';
+                        requestBody = { pacchettoId: id };
+                    } else if (type === 'prodotto') {
+                        endpoint = 'http://localhost:8080/api/prodotti/distributore/resend';
+                        requestBody = { prodottoId: id };
+                    } else {
+                        console.error('Tipo sconosciuto per il rinvio.');
+                        return;
+                    }
+
+                    fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prodottoId: prodottoId })
+                        body: JSON.stringify(requestBody)
                     })
                         .then(response => {
                             if (!response.ok) {
@@ -375,22 +597,31 @@
                         })
                         .then(result => {
                             alert(result);
-                            loadProducts(); // Aggiorna i prodotti
+                            // Ricarica i dati in base al tipo
+                            if (type === 'pacchetto') {
+                                loadPackages();
+                            } else {
+                                loadProducts();
+                            }
                         })
                         .catch(error => {
-                            console.error('Errore durante il rinvio del prodotto:', error);
-                            alert('Errore durante il rinvio del prodotto: ' + error.message);
+                            console.error('Errore durante il rinvio:', error);
+                            alert('Errore durante il rinvio: ' + error.message);
                         });
                 });
             });
         }
 
+
+
         function attachPublishListeners() {
             document.querySelectorAll('.btn-publish').forEach(button => {
                 button.addEventListener('click', function () {
-                    const prodottoId = this.getAttribute('data-id');
+                    const id = this.getAttribute('data-id');
+                    const type = this.getAttribute('data-type');  // Legge il tipo: "prodotto" o "pacchetto"
                     const row = this.closest('tr');
-                    // Recuperiamo i checkbox
+
+                    // Recuperiamo i checkbox per le opzioni di spedizione
                     const checkboxes = row.querySelectorAll(`input[type="checkbox"][name^="spedizioni"]`);
                     let shippingSelected = [];
                     checkboxes.forEach(checkbox => {
@@ -398,24 +629,42 @@
                             shippingSelected.push(checkbox.value);
                         }
                     });
+
                     if (shippingSelected.length === 0) {
-                        alert("Devi selezionare almeno una modalità di spedizione prima di pubblicare il prodotto!");
+                        alert("Devi selezionare almeno una modalità di spedizione prima di pubblicare!");
                         return;
                     }
 
-                    const conferma = confirm("Stai per pubblicare il prodotto nel Marketplace. Procedere?");
+                    const conferma = confirm("Stai per pubblicare l'elemento nel Marketplace. Procedere?");
                     if (!conferma) return;
 
                     const staffRole = "distributore";
 
-                    // Invia anche le opzioni di spedizione
-                    fetch(`http://localhost:8080/api/prodotti/${staffRole}/publish`, {
+                    // Determina endpoint e payload in base al tipo
+                    let endpoint = '';
+                    let requestBody = {};
+
+                    if (type === 'prodotto') {
+                        endpoint = `http://localhost:8080/api/prodotti/${staffRole}/publish`;
+                        requestBody = {
+                            prodottoId: Number(id),
+                            shippingOptions: shippingSelected
+                        };
+                    } else if (type === 'pacchetto') {
+                        endpoint = `http://localhost:8080/api/pacchetti/${staffRole}/publish`;
+                        requestBody = {
+                            pacchettoId: Number(id),
+                            shippingOptions: shippingSelected
+                        };
+                    } else {
+                        console.error('Tipo sconosciuto per la pubblicazione.');
+                        return;
+                    }
+
+                    fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            prodottoId: Number(prodottoId),
-                            shippingOptions: shippingSelected // <--- invio l’array
-                        })
+                        body: JSON.stringify(requestBody)
                     })
                         .then(response => {
                             if (!response.ok) {
@@ -427,7 +676,7 @@
                         })
                         .then(result => {
                             alert(result);
-                            // rimuovi la riga o ricarica la pagina
+                            // Rimuove la riga dalla tabella dopo la pubblicazione
                             row.remove();
                         })
                         .catch(error => {
@@ -437,6 +686,7 @@
             });
         }
 
+
         // Event listener sul pulsante "Visualizza Marketplace"
         viewMarketplaceButton.addEventListener('click', function () {
             // Toggle della classe "hidden" per mostrare o nascondere il container
@@ -444,12 +694,14 @@
 
             // Se il container NON è nascosto, carica i prodotti pubblicati
             if (!marketplaceContainer.classList.contains('hidden')) {
-                loadMarketplaceProducts();
+                loadMarketplaceItems();
             }
         });
 
         loadProducts(); // Carica i prodotti all'avvio
         refreshProductsButton.addEventListener('click', loadProducts);
+        loadPackages();
+        refreshPackagesButton.addEventListener('click', loadPackages)
 
         // Invia un nuovo prodotto
         submitForApproval.addEventListener('click', function () {
@@ -490,6 +742,72 @@
                     alert('Errore durante l\'invio del prodotto: ' + error.message);
                 });
         });
+
+        submitPackageButton.addEventListener('click', function () {
+            // Ottieni riferimenti agli elementi del form
+            const packageNome = document.getElementById('packageNome').value.trim();
+            const packagePrezzo = document.getElementById('packagePrezzo').value.trim();
+            const packageCategoria = document.getElementById('packageCategoria').value.trim();
+            const packageDescrizione = document.getElementById('packageDescrizione').value.trim();
+            const packageDisponibilita = document.getElementById('packageDisponibilita').value.trim();
+
+            const images = document.getElementById('packageImages').files;
+            const certificati = document.getElementById('packageCertificati').files;
+
+            // Verifica che tutti i campi di testo siano compilati
+            if (!packageNome || !packagePrezzo || !packageCategoria ||
+                !packageDescrizione || !packageDisponibilita) {
+                alert("Compila tutti i campi prima di inviare il pacchetto.");
+                return;
+            }
+
+            // Verifica che siano stati caricati almeno un'immagine e un certificato
+            if (images.length === 0) {
+                alert("Devi caricare almeno una immagine.");
+                return;
+            }
+            if (certificati.length === 0) {
+                alert("Devi caricare almeno un certificato.");
+                return;
+            }
+
+            // Verifica la corrispondenza tra il numero di immagini e certificati
+            if (images.length !== certificati.length) {
+                alert("Il numero di immagini deve corrispondere al numero di certificati.");
+                return;
+            }
+
+            // Conferma l'invio
+            if (!confirm("Inviare il pacchetto al Curatore per l'approvazione?")) return;
+
+            // Procedi con la creazione del form e l'invio della richiesta
+            const form = document.getElementById('packageForm');
+            const formData = new FormData(form);
+
+            fetch('http://localhost:8080/api/pacchetti/distributore/create', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errors => {
+                            displayErrors(errors, 'packageForm');
+                            throw new Error("Errore di validazione pacchetto");
+                        });
+                    }
+                    return response.text();
+                })
+                .then(result => {
+                    alert(result);
+                    form.reset();
+                    createPackageForm.classList.add('hidden');
+                })
+                .catch(error => {
+                    console.error('Errore invio pacchetto:', error);
+                    alert('Errore invio pacchetto: ' + error.message);
+                });
+        });
+
 
 
         function displayErrors(errors) {
