@@ -250,46 +250,78 @@
                 .catch(error => console.error('Errore nel recupero dei prodotti rimandati:', error));
         }
 
-        function loadMarketplaceProducts() {
-            fetch('http://localhost:8080/api/prodotti/published')
-                .then(response => response.json())
-                .then(prodottiPubblicati => {
+        function loadMarketplaceItems() {
+            Promise.all([
+                fetch('http://localhost:8080/api/prodotti/published').then(response => response.json()),
+                fetch('http://localhost:8080/api/pacchetti/published').then(response => response.json())
+            ])
+                .then(([prodottiPubblicati, pacchettiPubblicati]) => {
                     // Svuota la tabella
                     marketplaceTableBody.innerHTML = '';
 
-                    // Popola la tabella #marketplaceTable con i prodotti "pubblicato"
+                    // Popola la tabella con i prodotti pubblicati
                     prodottiPubblicati.forEach(prodotto => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>${prodotto.name}</td>
-                        <td>${parseFloat(prodotto.price).toFixed(2)}</td>
-                        <td>${prodotto.category}</td>
-                        <td>${prodotto.availability}</td>
-                        <td>${prodotto.info}</td>
-                        <td>
-                            <img
-                                src="http://localhost:8080/${prodotto.images}"
-                                alt="Immagine del prodotto"
-                                style="width: 100px; height: auto;"
-                            />
-                        </td>
-                        <td>
-                            <a
-                                href="http://localhost:8080/${prodotto.certificato}"
-                                target="_blank"
-                                rel="noopener noreferrer">
-                                Certificato
-                            </a>
-                        </td>
-                        <td>${prodotto.staff || ''}</td>
-                        <td>${prodotto.shippingOptions || ''}</td>
-                    `;
+                <td>${prodotto.name}</td>
+                <td>${parseFloat(prodotto.price).toFixed(2)}</td>
+                <td>${prodotto.category}</td>
+                <td>${prodotto.availability}</td>
+                <td>${prodotto.info}</td>
+                <td>
+                    <img
+                        src="http://localhost:8080/${prodotto.images}"
+                        alt="Immagine del prodotto"
+                        style="width: 100px; height: auto;"
+                    />
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/${prodotto.certificato}"
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        Certificato
+                    </a>
+                </td>
+                <td>${prodotto.staff || ''}</td>
+                <td>${prodotto.shippingOptions || ''}</td>
+            `;
+                        marketplaceTableBody.appendChild(row);
+                    });
+
+                    // Popola la tabella con i pacchetti pubblicati
+                    pacchettiPubblicati.forEach(pacchetto => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                <td>${pacchetto.name}</td>
+                <td>${parseFloat(pacchetto.price).toFixed(2)}</td>
+                <td>${pacchetto.category}</td>
+                <td>${pacchetto.availability}</td>
+                <td>${pacchetto.info}</td>
+                <td>
+                    <img
+                        src="http://localhost:8080/${pacchetto.images}"
+                        alt="Immagine del pacchetto"
+                        style="width: 100px; height: auto;"
+                    />
+                </td>
+                <td>
+                    <a
+                        href="http://localhost:8080/${pacchetto.certificati}"
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        Certificati
+                    </a>
+                </td>
+                <td>${pacchetto.staff || ''}</td>
+                <td>${pacchetto.shippingOptions || ''}</td>
+            `;
                         marketplaceTableBody.appendChild(row);
                     });
                 })
                 .catch(error => {
-                    console.error('Errore durante il recupero dei prodotti pubblicati:', error);
-                    alert('Errore durante il recupero dei prodotti pubblicati.');
+                    console.error('Errore durante il recupero dei prodotti/pacchetti pubblicati:', error);
+                    alert('Errore durante il recupero dei prodotti/pacchetti pubblicati.');
                 });
         }
 
@@ -445,7 +477,7 @@
 
             // Se il container NON è nascosto, carica i prodotti pubblicati
             if (!marketplaceContainer.classList.contains('hidden')) {
-                loadMarketplaceProducts();
+                loadMarketplaceItems();
             }
         });
 
