@@ -8,6 +8,7 @@ import unicam.filiera.models.roles.Role;
 import unicam.filiera.repositorys.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RegisteredUserService {
@@ -47,7 +48,33 @@ public class RegisteredUserService {
         }
     }
 
+    // Restituisce tutti gli acquirenti
     public List<RegisteredUser> getAllBuyers() {
         return getUsersByRole("ACQUIRENTE");
+    }
+
+    // 1) Metodo per trovare un RegisteredUser dato lo username
+    public Optional<RegisteredUser> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    // 2) Metodo per aggiungere denaro al saldo di un buyer
+    public String addAmountToBuyer(String username, Double amountToAdd) {
+        Optional<RegisteredUser> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return "Utente non trovato.";
+        }
+        RegisteredUser user = userOpt.get();
+
+        // Verifica il ruolo
+        if (user.getRole() != Role.ACQUIRENTE) {
+            return "Operazione non consentita: utente non è un ACQUIRENTE.";
+        }
+        // Aggiorna saldo
+        double newAmount = user.getAmount() + amountToAdd;
+        user.setAmount(newAmount);
+        userRepository.save(user);
+
+        return "Saldo aggiornato con successo. Nuovo saldo: " + newAmount;
     }
 }

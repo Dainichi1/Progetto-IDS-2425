@@ -395,12 +395,9 @@
         }
 
         function loadPackages() {
-            // 1) Pacchetti rimandati
-
             fetch('http://localhost:8080/api/pacchetti/distributore/rimandati')
                 .then(response => response.json())
                 .then(rimandati => {
-                    // Recupera i prodotti approvati
                     fetch('http://localhost:8080/api/pacchetti/distributore/approvati')
                         .then(response => response.json())
                         .then(approvati => {
@@ -413,62 +410,65 @@
                                 const isApprovato = pacchetto.stato.toLowerCase() === 'approvato';
                                 const row = document.createElement('tr');
                                 if (isApprovato) {
-                                    row.classList.add('approved'); // Aggiungi classe per stile opzionale
+                                    row.classList.add('approved');
                                 }
 
-                                // Crea le celle della tabella
                                 row.innerHTML = `
-                                    <td>${pacchetto.id}</td>
-                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="name">${pacchetto.name}</td>
-                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="price">${parseFloat(pacchetto.price).toFixed(2)}</td>
-                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="category">${pacchetto.category}</td>
-                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="info">${pacchetto.info}</td>
-                                    <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="availability">${pacchetto.availability}</td>
-                                    <td>
-                                        <img
-                                            src="http://localhost:8080/${pacchetto.images}"
-                                            alt="Immagine del pacchetto"
-                                            style="width: 100px; height: auto;"
-                                        />
-                                        <br>
-                                        ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="images" accept="image/*" />`}
-                                    </td>
-                                    <td>
-                                        <a
-                                            href="http://localhost:8080/${pacchetto.certificato}"
-                                            target="_blank"
-                                            rel="noopener noreferrer">
-                                            Certificato
-                                        </a>
-                                        <br>
-                                        ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="certificato" accept=".pdf,.doc,.docx" />`}
-                                    </td>
-                                    <td>${pacchetto.stato}</td>
-                                    <td>${pacchetto.curatorComments || 'Nessun commento'}</td>
-                                    <!-- Colonna Spedizioni -->
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="ordinaria" ${isApprovato ? '' : 'disabled'}>
-                                            Posta ordinaria (3 €)
-                                        </label><br>
-                                        <label>
-                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="corriere" ${isApprovato ? '' : 'disabled'}>
-                                            Corriere (5 €)
-                                        </label><br>
-                                        <label>
-                                            <input type="checkbox" name="spedizioni${pacchetto.id}" value="espresso" ${isApprovato ? '' : 'disabled'}>
-                                            Corriere espresso (10 €)
-                                        </label>
-                                    </td>
-                                    <td>
-                                        ${isApprovato ? `
-                                            <button class="btn-publish" data-id="${pacchetto.id}" data-type="pacchetto">Pubblica nel Marketplace</button>
-                                        ` : `
+                            <td>${pacchetto.id}</td>
+                            <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="name">${pacchetto.name}</td>
+                            <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="price">${parseFloat(pacchetto.price).toFixed(2)}</td>
+                            <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="category">${pacchetto.category}</td>
+                            <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="info">${pacchetto.info}</td>
+                            <td ${isApprovato ? '' : 'contenteditable="true"'} data-field="availability">${pacchetto.availability}</td>
+                            <td>
+                                ${
+                                    pacchetto.images
+                                        ? pacchetto.images.split(',').map(imgPath => `
+                                          <img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine del pacchetto" style="width:100px; height:auto;"/><br/>
+                                      `).join('')
+                                        : 'Nessuna immagine'
+                                }
+                                ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="images" accept="image/*" multiple />`}
+                            </td>
+                            <td>
+                                ${
+                                    pacchetto.certificati
+                                        ? pacchetto.certificati.split(',').map(certPath => `
+                                          <a href="http://localhost:8080/${certPath.trim()}" target="_blank" rel="noopener noreferrer">Certificato</a><br/>
+                                      `).join('')
+                                        : 'Nessun certificato'
+                                }
+                                ${isApprovato ? '' : `<input type="file" data-id="${pacchetto.id}" data-field="certificati" accept=".pdf,.doc,.docx" multiple />`}
+                            </td>
+                            <td>${pacchetto.stato}</td>
+                            <td>${pacchetto.curatorComments || 'Nessun commento'}</td>
+                            <!-- Colonna Spedizioni -->
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="spedizioni${pacchetto.id}" value="ordinaria" ${isApprovato ? '' : 'disabled'}>
+                                    Posta ordinaria (3 €)
+                                </label><br>
+                                <label>
+                                    <input type="checkbox" name="spedizioni${pacchetto.id}" value="corriere" ${isApprovato ? '' : 'disabled'}>
+                                    Corriere (5 €)
+                                </label><br>
+                                <label>
+                                    <input type="checkbox" name="spedizioni${pacchetto.id}" value="espresso" ${isApprovato ? '' : 'disabled'}>
+                                    Corriere espresso (10 €)
+                                </label>
+                            </td>
+                            <td>
+                                ${
+                                    isApprovato
+                                        ? `<button class="btn-publish" data-id="${pacchetto.id}" data-type="pacchetto">Pubblica nel Marketplace</button>`
+                                        : `
                                             <button class="btn-save" data-id="${pacchetto.id}">Salva Modifiche</button>
                                             <button class="btn-resend" data-id="${pacchetto.id}" data-type="pacchetto">Rinvia</button>
-                                        `}
-                                    </td>
-                                `;
+                                          `
+                                }
+                            </td>
+                        `;
+
                                 tableBody.appendChild(row);
                             });
 
@@ -476,10 +476,11 @@
                             attachResendListeners();
                             attachPublishListeners();
                         })
-                        .catch(error => console.error('Errore nel recupero dei prodotti approvati:', error));
+                        .catch(error => console.error('Errore nel recupero dei pacchetti approvati:', error));
                 })
-                .catch(error => console.error('Errore nel recupero dei prodotti rimandati:', error));
+                .catch(error => console.error('Errore nel recupero dei pacchetti rimandati:', error));
         }
+
 
 
         function attachSaveListeners() {

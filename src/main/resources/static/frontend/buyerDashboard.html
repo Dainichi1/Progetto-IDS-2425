@@ -17,6 +17,29 @@
             cursor: pointer;
             font-size: 1em;
         }
+        .hidden { display: none; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -25,20 +48,49 @@
 <h1 id="welcomeMessage">Benvenuto, Acquirente</h1>
 <p>Qui trovi le informazioni.</p>
 
+<!-- Sezione saldo e aggiunta fondi -->
+<div id="balanceContainer">
+    <p>Saldo attuale: <span id="buyerBalance">Caricamento...</span> €</p>
+    <input type="number" id="addAmountInput" placeholder="Inserisci importo" step="0.01" min="0" />
+    <button id="addAmountButton" class="btn-primary">Aggiungi Denaro</button>
+</div>
+
+<!-- Bottone per visualizzare il Marketplace -->
+<button id="viewMarketplace" class="btn-primary">Visualizza Marketplace</button>
+
+<!-- Contenitore nascosto per il Marketplace -->
+<div id="marketplaceContainer" class="hidden">
+    <h2>Marketplace</h2>
+    <table id="marketplaceTable">
+        <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Nome</th>
+            <th>Prezzo</th>
+            <th>Categoria</th>
+            <th>Disponibilità</th>
+            <th>Info</th>
+            <th>Immagine/i</th>
+            <th>Certificato/i</th>
+            <th>Staff</th>
+            <th>Opzioni di Spedizione</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
 <script>
+    // Logout
     document.getElementById('logoutButton').addEventListener('click', function () {
-        // Effettua la richiesta di logout al backend
         fetch('http://localhost:8080/api/login/logout', {
             method: 'POST',
-            credentials: 'include' // Includi i cookie nella richiesta
+            credentials: 'include'
         })
             .then(response => {
                 if (response.ok) {
-                    // Rimuovi i dati salvati localmente
                     localStorage.removeItem('userToken');
                     localStorage.removeItem('username');
-
-                    // Reindirizza alla schermata iniziale
                     window.location.href = 'http://localhost:8080/frontend/index.html';
                 } else {
                     alert('Errore durante il logout. Riprova.');
@@ -49,33 +101,160 @@
                 alert('Errore durante il logout.');
             });
     });
-    document.addEventListener('DOMContentLoaded', function () {
-        // Recupera il parametro username dalla query string
-        const params = new URLSearchParams(window.location.search);
-        const username = params.get('username'); // Assicurati che il login passi questo parametro
 
+    document.addEventListener('DOMContentLoaded', function () {
+        // Recupero dettagli utente
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
         if (!username) {
             alert('Errore: username non trovato.');
             return;
         }
 
-        // Chiama l'API per recuperare i dettagli dell'utente
+        // Recupera dettagli utente
         fetch(`http://localhost:8080/api/user/details?username=${username}`)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Errore nel recupero dei dettagli utente.');
-                }
+                if (!response.ok) throw new Error('Errore nel recupero dei dettagli utente.');
                 return response.json();
             })
             .then(userDetails => {
-                // Aggiorna il messaggio di benvenuto con nome e cognome
                 const welcomeMessage = document.getElementById('welcomeMessage');
                 welcomeMessage.textContent = `Benvenuto, Acquirente (${userDetails.name} ${userDetails.lastname})`;
+                loadBuyerBalance(username);  // Carica il saldo dopo aver ottenuto i dettagli
             })
             .catch(error => {
                 console.error('Errore:', error);
                 alert('Errore nel caricamento della dashboard.');
             });
+
+        // Funzione per caricare il saldo del buyer
+        function loadBuyerBalance(username) {
+            fetch(`http://localhost:8080/api/buyers/${username}/amount`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Impossibile recuperare il saldo.');
+                    return response.json();
+                })
+                .then(amount => {
+                    document.getElementById('buyerBalance').textContent = amount.toFixed(2);
+                })
+                .catch(error => {
+                    console.error('Errore nel recupero del saldo:', error);
+                    document.getElementById('buyerBalance').textContent = "Errore nel caricamento";
+                });
+        }
+
+        // Gestione aggiunta di denaro
+        document.getElementById('addAmountButton').addEventListener('click', function() {
+            const params = new URLSearchParams(window.location.search);
+            const username = params.get('username');
+            const amountToAdd = parseFloat(document.getElementById('addAmountInput').value);
+            if (isNaN(amountToAdd) || amountToAdd <= 0) {
+                alert('Inserisci un importo valido maggiore di 0.');
+                return;
+            }
+            fetch(`http://localhost:8080/api/buyers/${username}/addAmount?amountToAdd=${amountToAdd}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Errore nell\'aggiunta di denaro.');
+                    return response.text();
+                })
+                .then(message => {
+                    alert(message);
+                    document.getElementById('addAmountInput').value = '';
+                    loadBuyerBalance(username); // Aggiorna il saldo dopo l'aggiunta
+                })
+                .catch(error => {
+                    console.error('Errore durante l\'aggiunta di denaro:', error);
+                    alert('Errore durante l\'aggiunta di denaro.');
+                });
+        });
+
+        // Marketplace
+        const viewMarketplaceButton = document.getElementById('viewMarketplace');
+        const marketplaceContainer = document.getElementById('marketplaceContainer');
+        const marketplaceTableBody = document.querySelector('#marketplaceTable tbody');
+
+        viewMarketplaceButton.addEventListener('click', function () {
+            marketplaceContainer.classList.toggle('hidden');
+            if (!marketplaceContainer.classList.contains('hidden')) {
+                loadMarketplaceItems();
+            }
+        });
+
+        function loadMarketplaceItems() {
+            Promise.all([
+                fetch('http://localhost:8080/api/prodotti/published').then(res => {
+                    if (!res.ok) throw new Error('Errore nel recupero dei prodotti.');
+                    return res.json();
+                }),
+                fetch('http://localhost:8080/api/pacchetti/published').then(res => {
+                    if (!res.ok) throw new Error('Errore nel recupero dei pacchetti.');
+                    return res.json();
+                })
+            ])
+                .then(([prodottiPubblicati, pacchettiPubblicati]) => {
+                    marketplaceTableBody.innerHTML = '';
+
+                    // Aggiunge i prodotti alla tabella
+                    prodottiPubblicati.forEach(prodotto => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>Prodotto</td>
+                        <td>${prodotto.name}</td>
+                        <td>${parseFloat(prodotto.price).toFixed(2)}</td>
+                        <td>${prodotto.category}</td>
+                        <td>${prodotto.availability}</td>
+                        <td>${prodotto.info}</td>
+                        <td>
+                            ${prodotto.images ? prodotto.images.split(',').map(imgPath =>
+                            `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
+                        ).join('') : 'Nessuna immagine'}
+                        </td>
+                        <td>
+                            ${prodotto.certificato
+                            ? `<a href="http://localhost:8080/${prodotto.certificato}" target="_blank" rel="noopener noreferrer">Certificato</a>`
+                            : 'Nessun certificato'}
+                        </td>
+                        <td>${prodotto.staff || ''}</td>
+                        <td>${prodotto.shippingOptions || ''}</td>
+                    `;
+                        marketplaceTableBody.appendChild(row);
+                    });
+
+                    // Aggiunge i pacchetti alla tabella
+                    pacchettiPubblicati.forEach(pacchetto => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>Pacchetto</td>
+                        <td>${pacchetto.name}</td>
+                        <td>${parseFloat(pacchetto.price).toFixed(2)}</td>
+                        <td>${pacchetto.category}</td>
+                        <td>${pacchetto.availability}</td>
+                        <td>${pacchetto.info}</td>
+                        <td>
+                            ${pacchetto.images ? pacchetto.images.split(',').map(imgPath =>
+                            `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
+                        ).join('') : 'Nessuna immagine'}
+                        </td>
+                        <td>
+                            ${pacchetto.certificati
+                            ? pacchetto.certificati.split(',').map(certPath =>
+                                `<a href="http://localhost:8080/${certPath.trim()}" target="_blank" rel="noopener noreferrer">Certificato</a>`
+                            ).join('<br/>')
+                            : 'Nessun certificato'}
+                        </td>
+                        <td>${pacchetto.staff || ''}</td>
+                        <td>${pacchetto.shippingOptions || ''}</td>
+                    `;
+                        marketplaceTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore durante il caricamento del marketplace.');
+                });
+        }
     });
 </script>
 </body>

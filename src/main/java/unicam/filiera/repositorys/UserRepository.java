@@ -6,10 +6,13 @@ import unicam.filiera.models.actors.RegisteredUser;
 import unicam.filiera.models.roles.Role;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<RegisteredUser, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     List<RegisteredUser> findByRole(Role role);
+    Optional<RegisteredUser> findByUsername(String username);
+
 }
