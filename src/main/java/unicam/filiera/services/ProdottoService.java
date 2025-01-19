@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -135,18 +136,38 @@ public class ProdottoService {
         Prodotto prodotto = prodottoRepository.findById(prodottoId)
                 .orElseThrow(() -> new IllegalArgumentException("Prodotto non trovato con ID: " + prodottoId));
 
-        if (!"approvato".equalsIgnoreCase(prodotto.getStato())) {
+        // Modifica del controllo: consente stati "approvato" o "pubblicato"
+        if (!("approvato".equalsIgnoreCase(prodotto.getStato()) || "pubblicato".equalsIgnoreCase(prodotto.getStato()))) {
             throw new IllegalArgumentException("Solo i prodotti approvati possono essere pubblicati nel marketplace.");
         }
 
+        // Calcolo delle opzioni e dei costi di spedizione
         String shippingOptionsString = String.join(",", shippingOptions);
 
-        prodotto.setShippingOptions(shippingOptionsString);
+        List<String> costs = new ArrayList<>();
+        for (String option : shippingOptions) {
+            switch (option) {
+                case "ordinaria": costs.add("3"); break;
+                case "corriere": costs.add("5"); break;
+                case "espresso": costs.add("10"); break;
+                default: break;
+            }
+        }
+        String shippingCostCsv = String.join(",", costs);
 
-        prodotto.setStato("pubblicato");
+        // Imposta le opzioni e i costi di spedizione
+        prodotto.setShippingOptions(shippingOptionsString);
+        prodotto.setShippingCost(shippingCostCsv);
+
+        // Imposta lo stato a "pubblicato" se non lo è già
+        if (!"pubblicato".equalsIgnoreCase(prodotto.getStato())) {
+            prodotto.setStato("pubblicato");
+        }
 
         prodottoRepository.save(prodotto);
     }
+
+
 
     /**
      * Recupera tutti i prodotti con stato "Approvato".

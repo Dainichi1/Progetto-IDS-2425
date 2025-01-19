@@ -44,6 +44,9 @@ public class Prodotto {
     @Column
     private String shippingOptions;
 
+    @Column
+    private String shippingCost;
+
     // Costruttore no-arg pubblico richiesto da JPA
     public Prodotto() {
     }
@@ -61,7 +64,7 @@ public class Prodotto {
         this.curatorComments = builder.curatorComments;
         this.staff = builder.staff;
         this.shippingOptions = builder.shippingOptions;
-
+        this.shippingCost = builder.shippingCost;
     }
 
     // Getters
@@ -113,6 +116,8 @@ public class Prodotto {
         return shippingOptions;
     }
 
+    public String getShippingCost() { return shippingCost; }
+
     // Setters
     public void setId(Long id) {
         this.id = id;
@@ -162,6 +167,9 @@ public class Prodotto {
         this.shippingOptions = shippingOptions;
     }
 
+    public void setShippingCost(String shippingCost) { this.shippingCost = shippingCost; }
+
+
     // Builder Pattern
     public static class Builder {
         private String name;
@@ -175,6 +183,7 @@ public class Prodotto {
         private String curatorComments;
         private String staff;
         private String shippingOptions;
+        private String shippingCost;
 
         public Builder name(String name) {
             this.name = name;
@@ -234,5 +243,8 @@ public class Prodotto {
             this.shippingOptions = shippingOptions;
             return this;
         }
+
+        public Builder shippingCost(String shippingCost) { this.shippingCost = shippingCost; return this; }  // Metodo builder per shippingCost
+
     }
 }
