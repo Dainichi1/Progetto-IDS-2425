@@ -50,6 +50,9 @@ public class Pacchetto {
     @Column
     private String shippingOptions;
 
+    @Column
+    private String shippingCost;
+
     // Costruttore no-arg richiesto da JPA
     public Pacchetto() {
     }
@@ -67,6 +70,7 @@ public class Pacchetto {
         this.curatorComments = builder.curatorComments;
         this.staff = builder.staff;
         this.shippingOptions = builder.shippingOptions;
+        this.shippingCost = builder.shippingCost;
     }
 
     /* ====================== GETTER ====================== */
@@ -118,6 +122,8 @@ public class Pacchetto {
         return shippingOptions;
     }
 
+    public String getShippingCost() { return shippingCost; }
+
     /* ====================== SETTER ====================== */
     public void setId(Long id) {
         this.id = id;
@@ -167,6 +173,8 @@ public class Pacchetto {
         this.shippingOptions = shippingOptions;
     }
 
+    public void setShippingCost(String shippingCost) { this.shippingCost = shippingCost; }
+
     /* ====================== BUILDER ====================== */
     public static class Builder {
         private String name;
@@ -180,6 +188,7 @@ public class Pacchetto {
         private String curatorComments;
         private String staff;
         private String shippingOptions;
+        private String shippingCost;
 
         public Builder name(String name) {
             this.name = name;
@@ -235,6 +244,8 @@ public class Pacchetto {
             this.shippingOptions = shippingOptions;
             return this;
         }
+
+        public Builder shippingCost(String shippingCost) { this.shippingCost = shippingCost; return this; }
 
         public Pacchetto build() {
             return new Pacchetto(this);

@@ -64,6 +64,7 @@
     <table id="marketplaceTable">
         <thead>
         <tr>
+            <th>Seleziona</th>
             <th>Tipo</th>
             <th>Nome</th>
             <th>Prezzo</th>
@@ -101,6 +102,39 @@
                 alert('Errore durante il logout.');
             });
     });
+
+    function renderShippingCheckboxes(optionsCsv, costsCsv, productId) {
+        if (!optionsCsv) return '';
+        let options = optionsCsv.split(',');
+        let costs = costsCsv ? costsCsv.split(',') : [];
+        let html = '';
+        for (let i = 0; i < options.length; i++) {
+            let option = options[i];
+            let cost = costs[i] ? costs[i] : '-';
+            // Creazione di una checkbox per ciascuna opzione con il costo
+            html += `<label>
+                    <input type="checkbox" name="shipping_${productId}" value="${option}" data-cost="${cost}">
+                    ${option} (€${cost})
+                 </label><br/>`;
+        }
+        return html;
+    }
+
+    function attachQuantityListeners() {
+        document.querySelectorAll('.purchase-quantity').forEach(input => {
+            input.addEventListener('change', function () {
+                let available = parseInt(this.dataset.availability);
+                let qty = parseInt(this.value) || 0;
+                let errorDiv = this.nextElementSibling; // Il div errore immediatamente dopo l'input
+                if (qty > available) {
+                    errorDiv.style.display = 'block';
+                } else {
+                    errorDiv.style.display = 'none';
+                }
+            });
+        });
+    }
+
 
     document.addEventListener('DOMContentLoaded', function () {
         // Recupero dettagli utente
@@ -200,55 +234,64 @@
                     prodottiPubblicati.forEach(prodotto => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>Prodotto</td>
-                        <td>${prodotto.name}</td>
-                        <td>${parseFloat(prodotto.price).toFixed(2)}</td>
-                        <td>${prodotto.category}</td>
-                        <td>${prodotto.availability}</td>
-                        <td>${prodotto.info}</td>
-                        <td>
-                            ${prodotto.images ? prodotto.images.split(',').map(imgPath =>
-                            `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
-                        ).join('') : 'Nessuna immagine'}
-                        </td>
-                        <td>
-                            ${prodotto.certificato
-                            ? `<a href="http://localhost:8080/${prodotto.certificato}" target="_blank" rel="noopener noreferrer">Certificato</a>`
-                            : 'Nessun certificato'}
-                        </td>
-                        <td>${prodotto.staff || ''}</td>
-                        <td>${prodotto.shippingOptions || ''}</td>
-                    `;
+                            <td><input type="checkbox" class="select-product" data-id="${prodotto.id}"></td>
+                            <td>Prodotto</td>
+                            <td>${prodotto.name}</td>
+                            <td>${parseFloat(prodotto.price).toFixed(2)}</td>
+                            <td>${prodotto.category}</td>
+                            <td>
+                                ${prodotto.availability}
+                                <br/>
+                                <input type="number" class="purchase-quantity" data-availability="${prodotto.availability}" min="1" placeholder="Quantità">
+                                <div class="error-message" style="color:red; display:none;">Disponibilità insufficiente</div>
+                            </td>
+                            <td>${prodotto.info}</td>
+                            <td>
+                                ${prodotto.images ? prodotto.images.split(',').map(imgPath =>
+                                                `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
+                                            ).join('') : 'Nessuna immagine'}
+                            </td>
+                            <td>
+                                ${prodotto.certificato
+                                                ? `<a href="http://localhost:8080/${prodotto.certificato}" target="_blank" rel="noopener noreferrer">Certificato</a>`
+                                                : 'Nessun certificato'}
+                            </td>
+                            <td>${prodotto.staff || ''}</td>
+                            <td>${renderShippingCheckboxes(prodotto.shippingOptions, prodotto.shippingCost, prodotto.id)}</td>
+                        `;
                         marketplaceTableBody.appendChild(row);
                     });
 
                     // Aggiunge i pacchetti alla tabella
+                    // Aggiunge i pacchetti alla tabella
                     pacchettiPubblicati.forEach(pacchetto => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                        <td>Pacchetto</td>
-                        <td>${pacchetto.name}</td>
-                        <td>${parseFloat(pacchetto.price).toFixed(2)}</td>
-                        <td>${pacchetto.category}</td>
-                        <td>${pacchetto.availability}</td>
-                        <td>${pacchetto.info}</td>
-                        <td>
-                            ${pacchetto.images ? pacchetto.images.split(',').map(imgPath =>
-                            `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
-                        ).join('') : 'Nessuna immagine'}
-                        </td>
-                        <td>
-                            ${pacchetto.certificati
-                            ? pacchetto.certificati.split(',').map(certPath =>
-                                `<a href="http://localhost:8080/${certPath.trim()}" target="_blank" rel="noopener noreferrer">Certificato</a>`
-                            ).join('<br/>')
-                            : 'Nessun certificato'}
-                        </td>
-                        <td>${pacchetto.staff || ''}</td>
-                        <td>${pacchetto.shippingOptions || ''}</td>
-                    `;
+                            <td><input type="checkbox" class="select-product" data-id="${pacchetto.id}"></td>
+                            <td>Pacchetto</td>
+                            <td>${pacchetto.name}</td>
+                            <td>${parseFloat(pacchetto.price).toFixed(2)}</td>
+                            <td>${pacchetto.category}</td>
+                            <td>${pacchetto.availability}</td>
+                            <td>${pacchetto.info}</td>
+                            <td>
+                                ${pacchetto.images ? pacchetto.images.split(',').map(imgPath =>
+                                                `<img src="http://localhost:8080/${imgPath.trim()}" alt="Immagine" style="width:100px; height:auto;" />`
+                                            ).join('') : 'Nessuna immagine'}
+                            </td>
+                            <td>
+                                ${pacchetto.certificati
+                                                ? pacchetto.certificati.split(',').map(certPath =>
+                                                    `<a href="http://localhost:8080/${certPath.trim()}" target="_blank" rel="noopener noreferrer">Certificato</a>`
+                                                ).join('<br/>')
+                                                : 'Nessun certificato'}
+                            </td>
+                            <td>${pacchetto.staff || ''}</td>
+                            <td>${renderShippingCheckboxes(pacchetto.shippingOptions, pacchetto.shippingCost, pacchetto.id)}</td>
+                        `;
                         marketplaceTableBody.appendChild(row);
                     });
+                    attachQuantityListeners();
                 })
                 .catch(error => {
                     console.error('Errore:', error);

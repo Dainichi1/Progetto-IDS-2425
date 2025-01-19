@@ -105,12 +105,30 @@ public class PacchettoService {
             throw new IllegalArgumentException("Solo i pacchetti approvati possono essere pubblicati nel marketplace.");
         }
 
+        // Calcolo delle opzioni e dei costi di spedizione
         String shippingOptionsString = String.join(",", shippingOptions);
+
+        List<String> costs = new ArrayList<>();
+        for (String option : shippingOptions) {
+            switch (option) {
+                case "ordinaria": costs.add("3"); break;
+                case "corriere": costs.add("5"); break;
+                case "espresso": costs.add("10"); break;
+                default: break;
+            }
+        }
+        String shippingCostCsv = String.join(",", costs);
+
+        // Imposta le opzioni e i costi di spedizione nel pacchetto
         pacchetto.setShippingOptions(shippingOptionsString);
+        pacchetto.setShippingCost(shippingCostCsv);
+
+        // Imposta lo stato a "pubblicato"
         pacchetto.setStato("pubblicato");
 
         pacchettoRepository.save(pacchetto);
     }
+
 
     /**
      * Recupera i pacchetti "Rimandati" in base allo staff.
