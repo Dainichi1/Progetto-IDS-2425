@@ -57,6 +57,34 @@
 
 <!-- Bottone per visualizzare il Marketplace -->
 <button id="viewMarketplace" class="btn-primary">Visualizza Marketplace</button>
+<button id="addToCartButton" class="btn-primary">Aggiungi al carrello</button>
+<div id="cartTotalContainer">
+    <p>Totale carrello: <span id="cartTotal">0.00</span> €</p>
+</div>
+<!-- Bottone per visualizzare il Carrello -->
+<button id="viewCartButton" class="btn-primary">Visualizza Carrello</button>
+
+<!-- Contenitore per il Carrello -->
+<div id="cartContainer" class="hidden">
+    <h2>Carrello</h2>
+    <table id="cartTable">
+        <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Info</th>
+            <th>Staff</th>
+            <th>Opzioni di Spedizione</th>
+            <th>Quantità</th>
+            <th>Azione</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
 
 <!-- Contenitore nascosto per il Marketplace -->
 <div id="marketplaceContainer" class="hidden">
@@ -82,6 +110,9 @@
 </div>
 
 <script>
+    let cartItems = [];
+    let totalCost = 0;
+
     // Logout
     document.getElementById('logoutButton').addEventListener('click', function () {
         fetch('http://localhost:8080/api/login/logout', {
@@ -177,6 +208,92 @@
                 });
         }
 
+        document.getElementById('addToCartButton').addEventListener('click', function() {
+            // Itera su ogni riga della tabella marketplace
+            document.querySelectorAll('#marketplaceTable tbody tr').forEach(row => {
+                let productCheckbox = row.querySelector('.select-product');
+                if (productCheckbox && productCheckbox.checked) {
+                    let id = productCheckbox.getAttribute('data-id'); // Salva l'ID del prodotto
+                    // Recupera la quantità selezionata
+                    let quantityInput = row.querySelector('.purchase-quantity');
+                    if (!quantityInput || !quantityInput.value || parseInt(quantityInput.value) <= 0) {
+                        alert("Seleziona una quantità valida per il prodotto " + row.cells[2].innerText);
+                        return;
+                    }
+                    let quantity = parseInt(quantityInput.value);
+
+                    // Controlla se la quantità richiesta supera la disponibilità
+                    let available = parseInt(quantityInput.dataset.availability);
+                    if (quantity > available) {
+                        alert("Disponibilità insufficiente per " + row.cells[2].innerText);
+                        return;
+                    }
+
+                    // Raccoglie opzioni di spedizione selezionate e calcola i costi
+                    let shippingCheckboxes = row.querySelectorAll('input[type="checkbox"][name^="shipping_"]');
+                    let selectedShipping = [];
+                    let shippingCosts = 0;
+                    shippingCheckboxes.forEach(sc => {
+                        if (sc.checked) {
+                            selectedShipping.push(sc.value);
+                            shippingCosts += parseFloat(sc.dataset.cost) || 0;
+                        }
+                    });
+
+                    // Estrae i dettagli del prodotto dalla riga con gli indici corretti
+                    let cells = row.querySelectorAll('td');
+                    let tipo = cells[1].innerText.trim();              // Tipo: "Prodotto" o "Pacchetto"
+                    let name = cells[2].innerText.trim();              // Nome
+                    let unitPrice = parseFloat(cells[3].innerText.trim()) || 0;
+                    let category = cells[4].innerText.trim();
+                    let info = cells[6].innerText.trim();              // Info
+                    let staff = cells[9].innerText.trim();             // Staff
+
+                    // Calcola il prezzo totale basato sulla quantità
+                    let finalPrice = unitPrice * quantity;
+                    // Calcola il costo di spedizione totale (moltiplicato per la quantità)
+                    let finalShippingCost = shippingCosts * quantity;
+
+                    // Crea un oggetto per il prodotto aggiunto al carrello, includendo la quantità
+                    let item = {
+                        id: id,
+                        tipo: tipo,
+                        name: name,
+                        price: finalPrice,
+                        category: category,
+                        info: info,
+                        staff: staff,
+                        shippingOptions: selectedShipping.join(','),
+                        shippingCost: finalShippingCost,
+                        quantity: quantity
+                    };
+
+                    cartItems.push(item);
+                    totalCost += finalPrice + finalShippingCost;
+
+                    // Aggiorna la disponibilità mostrata nella riga
+                    let availabilityCell = row.querySelector('td:nth-child(6)');
+                    if (availabilityCell) {
+                        let currentAvailability = parseInt(availabilityCell.childNodes[0].textContent.trim()) || 0;
+                        let newAvailability = currentAvailability - quantity;
+                        availabilityCell.childNodes[0].textContent = newAvailability;
+                        if (quantityInput) {
+                            quantityInput.dataset.availability = newAvailability;
+                        }
+                    }
+                }
+            });
+
+            // Aggiorna la visualizzazione del costo totale
+            document.getElementById('cartTotal').textContent = totalCost.toFixed(2);
+            alert("Prodotti aggiunti al carrello. Costo totale aggiornato: €" + totalCost.toFixed(2));
+        });
+
+
+
+
+
+
         // Gestione aggiunta di denaro
         document.getElementById('addAmountButton').addEventListener('click', function() {
             const params = new URLSearchParams(window.location.search);
@@ -203,6 +320,67 @@
                     alert('Errore durante l\'aggiunta di denaro.');
                 });
         });
+
+        document.getElementById('viewCartButton').addEventListener('click', function() {
+            const cartContainer = document.getElementById('cartContainer');
+            const cartTableBody = document.querySelector('#cartTable tbody');
+            cartTableBody.innerHTML = '';  // Svuota il corpo della tabella
+
+            if(cartItems.length === 0) {
+                cartTableBody.innerHTML = '<tr><td colspan="8">Carrello vuoto</td></tr>';
+            } else {
+                cartItems.forEach((item, index) => {
+                    let row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${item.tipo}</td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.info}</td>
+                <td>${item.staff}</td>
+                <td>${item.shippingOptions}</td>
+                <td>${item.quantity}</td>
+                <td><button class="delete-button" data-index="${index}">Elimina</button></td>
+            `;
+                    cartTableBody.appendChild(row);
+                });
+
+                document.querySelectorAll('.delete-button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        let index = parseInt(this.dataset.index);
+                        let item = cartItems[index];
+
+                        // Rimuovi l'elemento dal carrello
+                        cartItems.splice(index, 1);
+
+                        // Aggiorna il costo totale rimuovendo il costo dell'elemento
+                        totalCost -= (item.price + item.shippingCost);
+                        document.getElementById('cartTotal').textContent = totalCost.toFixed(2);
+
+                        // Rimuovi la riga dal carrello
+                        this.closest('tr').remove();
+
+                        // Ripristina la disponibilità nel marketplace
+                        let marketplaceRow = document.querySelector(`#marketplaceTable tbody tr input.select-product[data-id="${item.id}"]`)?.closest('tr');
+                        if (marketplaceRow) {
+                            let quantityInput = marketplaceRow.querySelector('.purchase-quantity');
+                            if(quantityInput) {
+                                let currentAvail = parseInt(quantityInput.dataset.availability) || 0;
+                                let newAvail = currentAvail + item.quantity;
+                                quantityInput.dataset.availability = newAvail;
+                                let availabilityCell = marketplaceRow.querySelector('td:nth-child(6)');
+                                if(availabilityCell) {
+                                    availabilityCell.childNodes[0].textContent = newAvail;
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            cartContainer.classList.remove('hidden');  // Mostra il carrello
+        });
+
+
 
         // Marketplace
         const viewMarketplaceButton = document.getElementById('viewMarketplace');
